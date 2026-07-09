@@ -1074,30 +1074,32 @@ class NovelInfoActivity : BaseMaterialActivity() {
     }
 
     private fun cacheImage(url: String, forceUpdate: Boolean): Wenku8Error.ErrorCode {
-        val imageFileName = GlobalConfig.generateImageFileNameByURL(url)
-        val firstPath = GlobalConfig.getFirstFullSaveFilePath() +
-            GlobalConfig.imgsSaveFolderName + File.separator + imageFileName
-        val secondPath = GlobalConfig.getSecondFullSaveFilePath() +
-            GlobalConfig.imgsSaveFolderName + File.separator + imageFileName
-        if (
-            (!LightCache.testFileExist(firstPath) && !LightCache.testFileExist(secondPath)) ||
-            forceUpdate
+        val paths = NovelImageCachePlanner.paths(
+            url = url,
+            firstSaveRoot = GlobalConfig.getFirstFullSaveFilePath(),
+            secondSaveRoot = GlobalConfig.getSecondFullSaveFilePath(),
+            imageFolderName = GlobalConfig.imgsSaveFolderName,
+            fileNameForUrl = GlobalConfig::generateImageFileNameByURL,
+        )
+        if (NovelImageCachePlanner.shouldDownload(
+                firstExists = LightCache.testFileExist(paths.firstFilePath),
+                secondExists = LightCache.testFileExist(paths.secondFilePath),
+                forceUpdate = forceUpdate,
+            )
         ) {
             val fileContent = LightNetwork.LightHttpDownload(url)
                 ?: return Wenku8Error.ErrorCode.NETWORK_ERROR
             if (
                 !LightCache.saveFile(
-                    GlobalConfig.getFirstFullSaveFilePath() +
-                        GlobalConfig.imgsSaveFolderName + File.separator,
-                    imageFileName,
+                    paths.firstDirectoryPath,
+                    paths.fileName,
                     fileContent,
                     true,
                 )
             ) {
                 LightCache.saveFile(
-                    GlobalConfig.getSecondFullSaveFilePath() +
-                        GlobalConfig.imgsSaveFolderName + File.separator,
-                    imageFileName,
+                    paths.secondDirectoryPath,
+                    paths.fileName,
                     fileContent,
                     true,
                 )

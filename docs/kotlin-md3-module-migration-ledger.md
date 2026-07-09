@@ -8,7 +8,7 @@ This ledger keeps the long-running rewrite honest: the target is not only a mode
 
 | Module | Current role | Kotlin status | MD3 status | Required end state |
 | --- | --- | --- | --- | --- |
-| `:app` | Android application, UI, legacy reader, parser models, cache/save integration | Kotlin-owned: 0 Java files and 97 Kotlin files under `app/src/main/java` | Mixed: app theme is Material 3 and settings/modern reader have MD3 surfaces, while most legacy XML screens remain pre-MD3 | Compose or MD3 XML for every retained UI surface, with legacy reader and startup responsibilities split out of large Activities |
+| `:app` | Android application, UI, legacy reader, parser models, cache/save integration | Kotlin-owned: 0 Java files and 98 Kotlin files under `app/src/main/java` | Mixed: app theme is Material 3 and settings/modern reader have MD3 surfaces, while most legacy XML screens remain pre-MD3 | Compose or MD3 XML for every retained UI surface, with legacy reader and startup responsibilities split out of large Activities |
 | `:api` | Private API module when the private checkout is present | Not available in this public workspace | Not a UI module | Must remain compatible as an optional private implementation, with public build not depending on private sources |
 | `:api` via `api-stub` | Public fallback API implementation | Kotlin-owned: 0 Java files and 5 Kotlin files | Not a UI module | Keep explicit public-build behavior and no accidental private endpoint exposure |
 | Gradle/build scripts | Module selection, Kotlin/Compose enablement, Android packaging | Groovy Gradle scripts remain acceptable unless a later migration chooses Kotlin DSL | Compose and Material dependencies are enabled in `:app` | Public checkout builds the Android app without private API sources |
@@ -19,14 +19,14 @@ This ledger keeps the long-running rewrite honest: the target is not only a mode
 Generated with PowerShell file counts on 2026-07-09:
 
 ```text
-app/src/main/java:      java=0 kt=97
+app/src/main/java:      java=0 kt=98
 api-stub/src/main/java: java=0  kt=5
 ```
 
 Package-level `:app` production inventory:
 
 ```text
-activity  java=0  kt=17
+activity  java=0  kt=18
 adapter   java=0  kt=4
 async     java=0  kt=2
 component java=0  kt=2
@@ -48,7 +48,7 @@ util      java=0  kt=7
 7. Keep the now Kotlin-owned adapters covered by constructor/item-count contracts until their owning screens move to MD3.
 8. Continue converting user-facing screens in small MD3 slices; the application class, all Fragments, all shared components, base Material, Main, About, Search, Search Result, menu background selector, login, account info, new review post, review list, review reply list, image detail, and legacy vertical reader screens are now Kotlin-owned.
 9. Remove or retire legacy Java reader paths only after the modern Kotlin reader covers local/cloud loading, progress restore/save, catalog, settings, images, chapter edge navigation, and runtime QA screenshots. The legacy reader view foundations, page view, paginator, slider stack, loader abstraction/XML loader, V1 settings, and V1 horizontal reader Activity are now Kotlin-owned while preserving Java record-style accessors, enum names, static reader controls, getter/setter names, direction constants, saved-state behavior, public setting fields, manifest identity, reader menu behavior, and custom font/background pickers for transitional callers.
-10. The active production app and public API stub are now Java-free. The next architecture work is not another mechanical conversion pass: split `MainActivity` startup/save-migration responsibilities and `NovelInfoActivity` cache/download/detail responsibilities into lifecycle-aware Kotlin components, then continue MD3 screen rewrites. `MainActivity` save-migration directory selection and startup decision logic have started moving into pure tested Kotlin policy objects, and `NovelInfoActivity` chapter cache availability, volume cache marking, cache progress accounting, and selected-volume download progress accounting have begun moving into pure tested Kotlin components.
+10. The active production app and public API stub are now Java-free. The next architecture work is not another mechanical conversion pass: split `MainActivity` startup/save-migration responsibilities and `NovelInfoActivity` cache/download/detail responsibilities into lifecycle-aware Kotlin components, then continue MD3 screen rewrites. `MainActivity` save-migration directory selection and startup decision logic have started moving into pure tested Kotlin policy objects, and `NovelInfoActivity` chapter cache availability, volume cache marking, cache progress accounting, selected-volume download progress accounting, and image cache path/download planning have begun moving into pure tested Kotlin components.
 
 ## MD3 Acceptance Rules
 
