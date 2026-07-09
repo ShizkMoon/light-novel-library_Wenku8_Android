@@ -853,29 +853,17 @@ class NovelInfoActivity : BaseMaterialActivity() {
             chapterCid: Int,
             operationType: Int,
         ): Wenku8Error.ErrorCode {
-            if (!isLoading) return Wenku8Error.ErrorCode.USER_CANCELLED_TASK
-            val chapterResult = createChapterCacheService().cacheChapter(
+            return createChapterCacheWorkflow().cacheChapter(
                 aid = taskAid,
                 chapterCid = chapterCid,
                 language = GlobalConfig.getCurrentLang(),
                 forceUpdate = operationType == 2,
+                shouldCacheImages = GlobalConfig.doCacheImage(),
+                completeChapterWork = true,
+                progressTracker = progressTracker,
+                isActive = { isLoading },
+                publishProgress = { event -> publishProgress(event) },
             )
-            if (chapterResult.errorCode != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return chapterResult.errorCode
-            val xml = chapterResult.xml
-
-            if (GlobalConfig.doCacheImage()) {
-                val imageResult = createChapterImageCacheCoordinator().cacheImages(
-                    xml = xml,
-                    forceUpdate = operationType == 2,
-                    progressTracker = progressTracker,
-                    isActive = { isLoading },
-                    publishProgress = { event -> publishProgress(event) },
-                )
-                if (imageResult != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return imageResult
-            }
-
-            publishProgress(progressTracker.completeWork())
-            return Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED
         }
 
         override fun onProgressUpdate(vararg values: NovelCacheProgressEvent?) {
@@ -995,26 +983,17 @@ class NovelInfoActivity : BaseMaterialActivity() {
         }
 
         private fun downloadSelectedChapter(chapterCid: Int): Wenku8Error.ErrorCode {
-            val chapterResult = createChapterCacheService().cacheChapter(
+            return createChapterCacheWorkflow().cacheChapter(
                 aid = aid,
                 chapterCid = chapterCid,
                 language = GlobalConfig.getCurrentLang(),
                 forceUpdate = false,
+                shouldCacheImages = GlobalConfig.doCacheImage(),
+                completeChapterWork = false,
+                progressTracker = progressTracker,
+                isActive = { loading },
+                publishProgress = { event -> publishProgress(event) },
             )
-            if (chapterResult.errorCode != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return chapterResult.errorCode
-            val xml = chapterResult.xml
-
-            if (GlobalConfig.doCacheImage()) {
-                val imageResult = createChapterImageCacheCoordinator().cacheImages(
-                    xml = xml,
-                    forceUpdate = false,
-                    progressTracker = progressTracker,
-                    isActive = { loading },
-                    publishProgress = { event -> publishProgress(event) },
-                )
-                if (imageResult != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return imageResult
-            }
-            return Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED
         }
 
         override fun onProgressUpdate(vararg values: NovelCacheProgressEvent?) {
@@ -1068,6 +1047,17 @@ class NovelInfoActivity : BaseMaterialActivity() {
 
     private fun cacheImage(url: String, forceUpdate: Boolean): Wenku8Error.ErrorCode =
         createImageCacheService().cacheImage(url, forceUpdate)
+
+    private fun createChapterCacheWorkflow(): NovelChapterCacheWorkflow<Wenku8API.AppLanguage> {
+        val chapterCacheService = createChapterCacheService()
+        val imageCacheCoordinator = createChapterImageCacheCoordinator()
+        return NovelChapterCacheWorkflow(
+            cacheChapterXml = { novelAid, chapterCid, language, forceUpdate ->
+                chapterCacheService.cacheChapter(novelAid, chapterCid, language, forceUpdate)
+            },
+            cacheImages = imageCacheCoordinator::cacheImages,
+        )
+    }
 
     private fun createChapterImageCacheCoordinator(): NovelChapterImageCacheCoordinator =
         NovelChapterImageCacheCoordinator(
