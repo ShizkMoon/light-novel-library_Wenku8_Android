@@ -31,6 +31,7 @@ import org.mewx.wenku8.reader.modern.paging.ModernReaderSession
 import org.mewx.wenku8.reader.modern.paging.ReaderTextMeasurer
 import org.mewx.wenku8.reader.modern.progress.GlobalConfigReaderProgressStore
 import org.mewx.wenku8.reader.modern.progress.ModernReaderProgressController
+import org.mewx.wenku8.reader.modern.progress.ModernReaderProgressSaveCoordinator
 import org.mewx.wenku8.reader.modern.settings.ModernReaderDisplaySettings
 import org.mewx.wenku8.reader.modern.settings.ModernReaderDisplaySettingsController
 import org.mewx.wenku8.reader.modern.settings.SharedPreferencesModernReaderDisplaySettingsStore
@@ -56,6 +57,7 @@ class ModernReaderActivity : ComponentActivity() {
     private var readerContext: ReaderLaunchContext? = null
     private var readerArgs: ReaderLaunchArguments? = null
     private val progressController = ModernReaderProgressController(GlobalConfigReaderProgressStore())
+    private val progressSaveCoordinator = ModernReaderProgressSaveCoordinator(progressController)
     private val contentRepository = ModernReaderContentRepository(AndroidModernReaderRawContentSource())
     private val readingSessionCoordinator = ModernReaderReadingSessionCoordinator()
     private val displaySettingsCoordinator = ModernReaderDisplaySettingsCoordinator(
@@ -273,13 +275,10 @@ class ModernReaderActivity : ComponentActivity() {
     }
 
     private fun saveCurrentProgress(cursor: ReaderCursor? = null) {
-        val currentCursor = cursor ?: readerSession?.currentPage?.start ?: return
-        val context = readerContext ?: return
-        progressController.saveCurrentCursor(
-            aid = context.aid,
-            vid = context.vid,
-            cid = context.cid,
-            cursor = currentCursor,
+        progressSaveCoordinator.saveCurrentProgress(
+            context = readerContext,
+            session = readerSession,
+            cursor = cursor,
         )
     }
 
