@@ -63,6 +63,7 @@ class ModernReaderActivity : ComponentActivity() {
     private val displaySettingsCoordinator = ModernReaderDisplaySettingsCoordinator(
         createSession = ::createSession,
     )
+    private val chapterSwitchCoordinator = ModernReaderChapterSwitchCoordinator()
     private val chapterLoadCoordinator = ModernReaderChapterLoadCoordinator(
         loadContent = contentRepository::load,
         createTextMeasurer = ::createTextMeasurer,
@@ -204,28 +205,33 @@ class ModernReaderActivity : ComponentActivity() {
     }
 
     private fun showChapter(chapter: ReaderCatalogChapter) {
-        val currentArgs = readerArgs ?: return
-        val selection = ModernReaderChapterSelection.prepare(
-            currentArgs = currentArgs,
+        val update = chapterSwitchCoordinator.prepare(
+            currentArgs = readerArgs,
             chapter = chapter,
             displaySettings = displaySettings,
         ) ?: return
 
-        saveCurrentProgress()
-        loadFuture?.cancel(true)
+        if (update.shouldSaveCurrentProgress) {
+            saveCurrentProgress()
+        }
+        if (update.shouldCancelCurrentLoad) {
+            loadFuture?.cancel(true)
+        }
 
-        val nextArgs = selection.args
+        val nextArgs = update.args
         readerArgs = nextArgs
-        readerContext = selection.context
-        readerSession = null
-        readerDocument = null
+        readerContext = update.context
+        if (update.shouldClearCurrentReaderState) {
+            readerSession = null
+            readerDocument = null
+        }
 
-        uiState = selection.loadingState
+        uiState = update.loadingState
         loadChapter(
             args = nextArgs,
-            fallbackTitle = selection.fallbackTitle,
-            chapterTitle = selection.chapterTitle,
-            catalog = selection.catalog,
+            fallbackTitle = update.fallbackTitle,
+            chapterTitle = update.chapterTitle,
+            catalog = update.catalog,
         )
     }
 
