@@ -88,6 +88,8 @@ fun ModernReaderScreen(
     onNightModeChange: (Boolean) -> Unit = {},
     onSelectPage: (Int) -> Unit = {},
     onSelectChapter: (ReaderCatalogChapter) -> Unit = {},
+    cachedImagePathForSource: (String) -> String? = { null },
+    onOpenImage: (String) -> Unit = {},
 ) {
     var controlsVisible by remember { mutableStateOf(true) }
     var settingsVisible by remember { mutableStateOf(false) }
@@ -111,15 +113,6 @@ fun ModernReaderScreen(
             .background(pageBackground)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
-        ReaderPageContent(
-            state = state,
-            textColor = pageText,
-            displaySettings = state.displaySettings,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 36.dp, vertical = 20.dp),
-        )
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -144,6 +137,17 @@ fun ModernReaderScreen(
                         }
                     }
                 },
+        )
+
+        ReaderPageContent(
+            state = state,
+            textColor = pageText,
+            displaySettings = state.displaySettings,
+            cachedImagePathForSource = cachedImagePathForSource,
+            onOpenImage = onOpenImage,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 36.dp, vertical = 20.dp),
         )
 
         if (controlsVisible) {

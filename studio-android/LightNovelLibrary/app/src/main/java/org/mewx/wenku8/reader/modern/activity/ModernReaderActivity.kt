@@ -1,5 +1,6 @@
 package org.mewx.wenku8.reader.modern.activity
 
+import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
 import android.os.Handler
@@ -10,10 +11,14 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import org.mewx.wenku8.R
+import org.mewx.wenku8.activity.ViewImageDetailActivity
+import org.mewx.wenku8.global.GlobalConfig
 import org.mewx.wenku8.reader.modern.catalog.ModernReaderCatalog
 import org.mewx.wenku8.reader.modern.catalog.ReaderCatalogChapter
 import org.mewx.wenku8.reader.modern.data.AndroidModernReaderRawContentSource
 import org.mewx.wenku8.reader.modern.data.ModernReaderContentRepository
+import org.mewx.wenku8.reader.modern.image.ModernReaderCachedImageResolver
 import org.mewx.wenku8.reader.modern.layout.ModernReaderLayoutSpecFactory
 import org.mewx.wenku8.reader.modern.layout.ModernReaderWindowMetrics
 import org.mewx.wenku8.reader.modern.launch.ReaderLaunchArguments
@@ -45,6 +50,10 @@ class ModernReaderActivity : ComponentActivity() {
     private var readerContext: ReaderLaunchContext? = null
     private var readerArgs: ReaderLaunchArguments? = null
     private val progressController = ModernReaderProgressController(GlobalConfigReaderProgressStore())
+    private val cachedImageResolver = ModernReaderCachedImageResolver(
+        fileNameForUrl = GlobalConfig::generateImageFileNameByURL,
+        existingPathForFileName = GlobalConfig::getExistingNovelContentImagePath,
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,6 +84,8 @@ class ModernReaderActivity : ComponentActivity() {
                     },
                     onSelectPage = ::showPage,
                     onSelectChapter = ::showChapter,
+                    cachedImagePathForSource = cachedImageResolver::cachedPathFor,
+                    onOpenImage = ::openImageDetail,
                 )
             }
         }
@@ -183,6 +194,14 @@ class ModernReaderActivity : ComponentActivity() {
             chapterTitle = selection.chapterTitle,
             catalog = selection.catalog,
         )
+    }
+
+    @Suppress("DEPRECATION")
+    private fun openImageDetail(path: String) {
+        val intent = Intent(this, ViewImageDetailActivity::class.java)
+        intent.putExtra("path", path)
+        startActivity(intent)
+        overridePendingTransition(R.anim.fade_in, R.anim.hold)
     }
 
     private fun updateReadingStateFromSession(session: ModernReaderSession) {

@@ -1,5 +1,8 @@
 package org.mewx.wenku8.reader.modern.ui
 
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,9 +15,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,6 +36,8 @@ internal fun ReaderPageContent(
     textColor: Color,
     displaySettings: ModernReaderDisplaySettings,
     modifier: Modifier = Modifier,
+    cachedImagePathForSource: (String) -> String? = { null },
+    onOpenImage: (String) -> Unit = {},
 ) {
     val model = ReaderPageContentUiModel.from(state)
     Column(
@@ -50,6 +58,8 @@ internal fun ReaderPageContent(
                     page = page,
                     textColor = textColor,
                     displaySettings = displaySettings,
+                    cachedImagePathForSource = cachedImagePathForSource,
+                    onOpenImage = onOpenImage,
                 )
             }
         }
@@ -61,26 +71,15 @@ private fun ReaderLines(
     page: ReaderPage,
     textColor: Color,
     displaySettings: ModernReaderDisplaySettings,
+    cachedImagePathForSource: (String) -> String?,
+    onOpenImage: (String) -> Unit,
 ) {
     page.lines.forEach { line ->
         if (line.type == ReaderLineType.IMAGE) {
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                shape = MaterialTheme.shapes.medium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-                    .padding(vertical = 12.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "插图 ${line.source.orEmpty()}",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
+            ReaderImageLine(
+                model = ReaderImageLineUiModel.from(line, cachedImagePathForSource),
+                onOpenImage = onOpenImage,
+            )
         } else {
             Text(
                 text = line.text,
@@ -95,6 +94,52 @@ private fun ReaderLines(
                 softWrap = false,
                 modifier = Modifier.padding(vertical = 5.dp),
             )
+        }
+    }
+}
+
+@Composable
+private fun ReaderImageLine(
+    model: ReaderImageLineUiModel,
+    onOpenImage: (String) -> Unit,
+) {
+    val cachedPath = model.cachedPath
+    val bitmap = remember(cachedPath) {
+        cachedPath?.let(BitmapFactory::decodeFile)
+    }
+    val surfaceModifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 12.dp)
+        .height(180.dp)
+
+    if (cachedPath != null && bitmap != null) {
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            shape = MaterialTheme.shapes.medium,
+            modifier = surfaceModifier.clickable { onOpenImage(cachedPath) },
+        ) {
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = model.placeholderText,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+    } else {
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            shape = MaterialTheme.shapes.medium,
+            modifier = surfaceModifier,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    text = model.placeholderText,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
         }
     }
 }
