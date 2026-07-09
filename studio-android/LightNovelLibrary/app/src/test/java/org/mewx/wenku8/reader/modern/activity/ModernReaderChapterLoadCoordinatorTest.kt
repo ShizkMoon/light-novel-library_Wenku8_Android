@@ -102,6 +102,51 @@ class ModernReaderChapterLoadCoordinatorTest {
         assertTrue(loadedOutcomes.isEmpty())
     }
 
+    @Test
+    fun skipsOlderChapterLoadOutcomeAfterNewerLoadStarts() {
+        val queue = WorkQueue()
+        val loadedOutcomes = mutableListOf<ModernReaderChapterLoadOutcome>()
+        val coordinator = coordinator(
+            queue = queue,
+            loadContent = { request ->
+                ModernReaderLoadResult.Success(
+                    ReaderDocument(
+                        title = "Chapter ${request.cid}",
+                        blocks = listOf(ReaderBlock.Paragraph("content ${request.cid}")),
+                    ),
+                )
+            },
+        )
+
+        coordinator.loadChapter(
+            args = launchArgs(aid = 7, cid = 101),
+            fallbackTitle = "Fallback 101",
+            chapterTitle = "Chapter 101",
+            catalog = ModernReaderCatalog.from(volume = null, currentCid = 101),
+            displaySettings = ModernReaderDisplaySettings(),
+            isActive = { true },
+            onLoaded = { loadedOutcomes += it },
+        )
+        coordinator.loadChapter(
+            args = launchArgs(aid = 7, cid = 102),
+            fallbackTitle = "Fallback 102",
+            chapterTitle = "Chapter 102",
+            catalog = ModernReaderCatalog.from(volume = null, currentCid = 102),
+            displaySettings = ModernReaderDisplaySettings(),
+            isActive = { true },
+            onLoaded = { loadedOutcomes += it },
+        )
+
+        queue.runBackground()
+        queue.runMain()
+        queue.runBackground()
+        queue.runMain()
+
+        assertEquals(1, loadedOutcomes.size)
+        assertEquals(102, loadedOutcomes.single().state.cid)
+        assertEquals("Chapter 102", loadedOutcomes.single().state.chapterTitle)
+    }
+
     private fun coordinator(
         queue: WorkQueue,
         loadContent: (ModernReaderContentRequest) -> ModernReaderLoadResult = {

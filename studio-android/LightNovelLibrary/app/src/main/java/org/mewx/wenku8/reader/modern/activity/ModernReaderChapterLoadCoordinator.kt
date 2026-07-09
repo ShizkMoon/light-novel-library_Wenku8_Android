@@ -1,6 +1,7 @@
 package org.mewx.wenku8.reader.modern.activity
 
 import java.util.concurrent.Future
+import java.util.concurrent.atomic.AtomicInteger
 import org.mewx.wenku8.reader.modern.catalog.ModernReaderCatalog
 import org.mewx.wenku8.reader.modern.data.ModernReaderContentRequest
 import org.mewx.wenku8.reader.modern.data.ModernReaderLoadResult
@@ -21,6 +22,8 @@ class ModernReaderChapterLoadCoordinator(
     private val runInBackground: (() -> Unit) -> Future<*>,
     private val postToMain: (() -> Unit) -> Unit,
 ) {
+    private val loadGeneration = AtomicInteger(0)
+
     fun loadChapter(
         args: ReaderLaunchArguments,
         fallbackTitle: String,
@@ -29,8 +32,9 @@ class ModernReaderChapterLoadCoordinator(
         displaySettings: ModernReaderDisplaySettings,
         isActive: () -> Boolean,
         onLoaded: (ModernReaderChapterLoadOutcome) -> Unit,
-    ): Future<*> =
-        runInBackground {
+    ): Future<*> {
+        val generation = loadGeneration.incrementAndGet()
+        return runInBackground {
             val result = loadContent(
                 ModernReaderChapterLoadModel.request(
                     args = args,
@@ -48,9 +52,10 @@ class ModernReaderChapterLoadCoordinator(
                 createSession = createSession,
             )
             postToMain {
-                if (isActive()) {
+                if (isActive() && generation == loadGeneration.get()) {
                     onLoaded(outcome)
                 }
             }
         }
+    }
 }

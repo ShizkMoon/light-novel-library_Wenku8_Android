@@ -10,7 +10,7 @@ The modern reader already has a meaningful Kotlin foundation:
 
 - Compose Material 3 reader surface and sheets exist under `reader/modern/ui`.
 - Pagination, layout, launch, image, progress, and chapter orchestration are represented by Kotlin components.
-- `ModernReaderActivity` has started moving decisions into coordinators, but still owns lifecycle wiring, executor state, layout creation, image detail launch, and session construction.
+- `ModernReaderActivity` has started moving decisions into coordinators, and chapter loading now rejects stale outcomes from older load generations before they can overwrite newer reader state. The Activity still owns lifecycle wiring, executor state, layout creation, image detail launch, and session construction.
 - The legacy V1 and vertical readers still exist and should remain available until the modern reader is proven as the primary path.
 
 The next work should not be another mechanical conversion pass. It should close product-level gaps that stop the modern reader from replacing the old reader.
