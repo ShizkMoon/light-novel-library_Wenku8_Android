@@ -22,7 +22,7 @@ object ModernReaderLayoutSpecFactory {
             contentHeightPx = (metrics.heightPx - metrics.dp(244)).coerceAtLeast(metrics.dp(360)),
             fontHeightPx = metrics.sp(normalizedSettings.lineHeightSp),
             lineSpacingPx = metrics.dp(10),
-            paragraphSpacingPx = metrics.dp(18),
+            paragraphSpacingPx = metrics.sp(normalizedSettings.paragraphSpacingSp),
         )
     }
 

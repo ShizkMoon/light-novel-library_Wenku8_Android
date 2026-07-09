@@ -11,11 +11,13 @@ class ReaderSettingsUiModelTest {
             ModernReaderDisplaySettings(
                 fontSizeSp = 21,
                 lineHeightSp = 34,
+                paragraphSpacingSp = 22,
             ),
         )
 
         assertEquals("21 sp", model.fontSizeValue)
         assertEquals("34 sp", model.lineHeightValue)
+        assertEquals("22 sp", model.paragraphSpacingValue)
     }
 
     @Test

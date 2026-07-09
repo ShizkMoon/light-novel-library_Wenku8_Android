@@ -31,6 +31,8 @@ internal fun ReaderSettingsSheet(
     onIncreaseFontSize: () -> Unit,
     onDecreaseLineHeight: () -> Unit,
     onIncreaseLineHeight: () -> Unit,
+    onDecreaseParagraphSpacing: () -> Unit,
+    onIncreaseParagraphSpacing: () -> Unit,
     onNightModeChange: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -68,6 +70,13 @@ internal fun ReaderSettingsSheet(
                 supportingTextColor = supportingTextColor,
                 onDecrease = onDecreaseLineHeight,
                 onIncrease = onIncreaseLineHeight,
+            )
+            ReaderSettingsStepper(
+                label = "段间距",
+                value = model.paragraphSpacingValue,
+                supportingTextColor = supportingTextColor,
+                onDecrease = onDecreaseParagraphSpacing,
+                onIncrease = onIncreaseParagraphSpacing,
             )
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,

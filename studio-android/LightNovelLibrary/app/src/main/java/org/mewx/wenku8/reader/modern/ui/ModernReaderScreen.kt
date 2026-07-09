@@ -85,6 +85,8 @@ fun ModernReaderScreen(
     onIncreaseFontSize: () -> Unit = {},
     onDecreaseLineHeight: () -> Unit = {},
     onIncreaseLineHeight: () -> Unit = {},
+    onDecreaseParagraphSpacing: () -> Unit = {},
+    onIncreaseParagraphSpacing: () -> Unit = {},
     onNightModeChange: (Boolean) -> Unit = {},
     onSelectPage: (Int) -> Unit = {},
     onSelectChapter: (ReaderCatalogChapter) -> Unit = {},
@@ -175,6 +177,8 @@ fun ModernReaderScreen(
                 onIncreaseFontSize = onIncreaseFontSize,
                 onDecreaseLineHeight = onDecreaseLineHeight,
                 onIncreaseLineHeight = onIncreaseLineHeight,
+                onDecreaseParagraphSpacing = onDecreaseParagraphSpacing,
+                onIncreaseParagraphSpacing = onIncreaseParagraphSpacing,
                 onNightModeChange = onNightModeChange,
                 onDismiss = { overlayState = overlayState.dismissSettings() },
             )

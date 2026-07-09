@@ -120,6 +120,12 @@ class ModernReaderActivity : ComponentActivity() {
                     onIncreaseFontSize = { applyDisplaySettings(displaySettingsController.increaseFontSize()) },
                     onDecreaseLineHeight = { applyDisplaySettings(displaySettingsController.decreaseLineHeight()) },
                     onIncreaseLineHeight = { applyDisplaySettings(displaySettingsController.increaseLineHeight()) },
+                    onDecreaseParagraphSpacing = {
+                        applyDisplaySettings(displaySettingsController.decreaseParagraphSpacing())
+                    },
+                    onIncreaseParagraphSpacing = {
+                        applyDisplaySettings(displaySettingsController.increaseParagraphSpacing())
+                    },
                     onNightModeChange = { enabled ->
                         applyDisplaySettings(displaySettingsController.setNightMode(enabled))
                     },

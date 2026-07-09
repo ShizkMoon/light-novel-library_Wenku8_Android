@@ -58,4 +58,21 @@ class ModernReaderLayoutSpecFactoryTest {
 
         assertEquals(120, spec.fontHeightPx)
     }
+
+    @Test
+    fun displaySettingsControlMeasuredParagraphSpacing() {
+        val spec = ModernReaderLayoutSpecFactory.create(
+            metrics = ModernReaderWindowMetrics(
+                widthPx = 1080,
+                heightPx = 2400,
+                density = 3f,
+                scaledDensity = 3f,
+            ),
+            displaySettings = ModernReaderDisplaySettings(
+                paragraphSpacingSp = 24,
+            ),
+        )
+
+        assertEquals(72, spec.paragraphSpacingPx)
+    }
 }

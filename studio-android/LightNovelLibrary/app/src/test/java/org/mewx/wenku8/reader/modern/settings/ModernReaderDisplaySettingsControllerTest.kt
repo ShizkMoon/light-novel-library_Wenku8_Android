@@ -56,6 +56,19 @@ class ModernReaderDisplaySettingsControllerTest {
     }
 
     @Test
+    fun paragraphSpacingChangesAreClampedAndSaved() {
+        val store = FakeDisplaySettingsStore(ModernReaderDisplaySettings(paragraphSpacingSp = 34))
+        val controller = ModernReaderDisplaySettingsController(store)
+
+        assertEquals(ModernReaderDisplaySettings.MAX_PARAGRAPH_SPACING_SP, controller.increaseParagraphSpacing().paragraphSpacingSp)
+        assertEquals(ModernReaderDisplaySettings.MAX_PARAGRAPH_SPACING_SP, controller.increaseParagraphSpacing().paragraphSpacingSp)
+        assertEquals(
+            ModernReaderDisplaySettings(paragraphSpacingSp = ModernReaderDisplaySettings.MAX_PARAGRAPH_SPACING_SP),
+            store.saved.last(),
+        )
+    }
+
+    @Test
     fun nightModeChangeIsSaved() {
         val store = FakeDisplaySettingsStore(ModernReaderDisplaySettings())
         val controller = ModernReaderDisplaySettingsController(store)
