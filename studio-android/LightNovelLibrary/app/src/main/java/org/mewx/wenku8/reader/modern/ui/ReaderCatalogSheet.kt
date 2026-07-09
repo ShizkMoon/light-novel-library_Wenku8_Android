@@ -94,9 +94,14 @@ internal fun ReaderCatalogSheet(
                     modifier = Modifier.padding(horizontal = 12.dp),
                 )
             }
+            Text(
+                text = catalogUi.summaryText,
+                color = supportingTextColor,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(horizontal = 12.dp),
+            )
             ReaderChapterList(
-                catalog = catalog,
-                fallbackTitle = catalogUi.fallbackTitle,
+                catalog = catalogUi,
                 supportingTextColor = supportingTextColor,
                 onSelectChapter = onSelectChapter,
             )
@@ -107,13 +112,12 @@ internal fun ReaderCatalogSheet(
 
 @Composable
 private fun ReaderChapterList(
-    catalog: ModernReaderCatalog,
-    fallbackTitle: String,
+    catalog: ReaderCatalogUiModel,
     supportingTextColor: Color,
     onSelectChapter: (ReaderCatalogChapter) -> Unit,
 ) {
     val listState = rememberLazyListState(
-        initialFirstVisibleItemIndex = (catalog.currentChapterItemIndex - 1).coerceAtLeast(0),
+        initialFirstVisibleItemIndex = catalog.initialFirstVisibleItemIndex,
     )
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -126,7 +130,7 @@ private fun ReaderChapterList(
             catalog.sections.forEach { section ->
                 item(key = "volume-${section.volumeId}") {
                     Text(
-                        text = section.title.ifBlank { fallbackTitle },
+                        text = section.title,
                         color = supportingTextColor,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Medium,
@@ -137,11 +141,11 @@ private fun ReaderChapterList(
                 }
                 items(
                     items = section.chapters,
-                    key = { chapter -> "${section.volumeId}:${chapter.cid}" },
+                    key = { chapter -> "${section.volumeId}:${chapter.source.cid}" },
                 ) { chapter ->
                     ReaderChapterRow(
                         chapter = chapter,
-                        onClick = { onSelectChapter(chapter) },
+                        onClick = { onSelectChapter(chapter.source) },
                     )
                 }
             }
@@ -151,33 +155,33 @@ private fun ReaderChapterList(
 
 @Composable
 private fun ReaderChapterRow(
-    chapter: ReaderCatalogChapter,
+    chapter: ReaderCatalogChapterUiModel,
     onClick: () -> Unit,
 ) {
-    val rowBackground = if (chapter.isCurrent) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-    } else {
+    val rowBackground = if (chapter.isSelectable) {
         Color.Transparent
+    } else {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
     }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .background(rowBackground)
-            .clickable(enabled = !chapter.isCurrent, onClick = onClick)
+            .clickable(enabled = chapter.isSelectable, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 12.dp),
     ) {
         Text(
             text = chapter.title,
             style = MaterialTheme.typography.bodyLarge,
-            fontWeight = if (chapter.isCurrent) FontWeight.SemiBold else FontWeight.Normal,
+            fontWeight = if (chapter.isSelectable) FontWeight.Normal else FontWeight.SemiBold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
-        if (chapter.isCurrent) {
+        chapter.stateLabel?.let { stateLabel ->
             Text(
-                text = "当前",
+                text = stateLabel,
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.labelMedium,
             )
