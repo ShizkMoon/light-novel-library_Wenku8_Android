@@ -4,6 +4,8 @@ Last verified: 2026-07-10
 
 This ledger keeps the long-running rewrite honest: the target is not only a modern reader slice, but a repo-wide Kotlin rewrite and Material Design 3 migration that still builds the Android app from the public checkout.
 
+Direction baseline: see `docs/kotlin-md3-rewrite-direction.md` for the repo-level target, scope boundaries, reader-first product direction, public API guardrail, and phased MD3 roadmap. This ledger tracks inventory and migration evidence; the direction document defines why the next slices are selected.
+
 ## Public Build Modules
 
 | Module | Current role | Kotlin status | MD3 status | Required end state |
