@@ -24,6 +24,7 @@ import org.mewx.wenku8.reader.modern.layout.ModernReaderLayoutSpecFactory
 import org.mewx.wenku8.reader.modern.layout.ModernReaderWindowMetrics
 import org.mewx.wenku8.reader.modern.launch.ReaderLaunchArguments
 import org.mewx.wenku8.reader.modern.launch.ReaderLaunchContext
+import org.mewx.wenku8.reader.modern.model.ReaderCursor
 import org.mewx.wenku8.reader.modern.model.ReaderDocument
 import org.mewx.wenku8.reader.modern.model.ReaderLayoutSpec
 import org.mewx.wenku8.reader.modern.paging.ModernReaderSession
@@ -54,6 +55,7 @@ class ModernReaderActivity : ComponentActivity() {
     private var readerArgs: ReaderLaunchArguments? = null
     private val progressController = ModernReaderProgressController(GlobalConfigReaderProgressStore())
     private val contentRepository = ModernReaderContentRepository(AndroidModernReaderRawContentSource())
+    private val readingSessionCoordinator = ModernReaderReadingSessionCoordinator()
     private val chapterLoadCoordinator = ModernReaderChapterLoadCoordinator(
         loadContent = contentRepository::load,
         createTextMeasurer = ::createTextMeasurer,
@@ -162,21 +164,34 @@ class ModernReaderActivity : ComponentActivity() {
     }
 
     private fun showPreviousPage() {
-        val session = readerSession ?: return
-        session.previousPage()
-        updateReadingStateFromSession(session)
+        applyReadingSessionUpdate(
+            readingSessionCoordinator.previousPage(
+                session = readerSession,
+                currentState = uiState,
+                displaySettings = displaySettings,
+            ),
+        )
     }
 
     private fun showNextPage() {
-        val session = readerSession ?: return
-        session.nextPage()
-        updateReadingStateFromSession(session)
+        applyReadingSessionUpdate(
+            readingSessionCoordinator.nextPage(
+                session = readerSession,
+                currentState = uiState,
+                displaySettings = displaySettings,
+            ),
+        )
     }
 
     private fun showPage(pageIndex: Int) {
-        val session = readerSession ?: return
-        session.goToPage(pageIndex)
-        updateReadingStateFromSession(session)
+        applyReadingSessionUpdate(
+            readingSessionCoordinator.selectPage(
+                pageIndex = pageIndex,
+                session = readerSession,
+                currentState = uiState,
+                displaySettings = displaySettings,
+            ),
+        )
     }
 
     private fun showChapter(chapter: ReaderCatalogChapter) {
@@ -229,20 +244,11 @@ class ModernReaderActivity : ComponentActivity() {
             },
         )
 
-    private fun updateReadingStateFromSession(session: ModernReaderSession) {
-        val currentState = uiState ?: return
-        uiState = ModernReaderStateFactory.reading(
-            aid = currentState.aid,
-            cid = currentState.cid,
-            title = currentState.title,
-            chapterTitle = currentState.chapterTitle,
-            page = session.currentPage,
-            pageIndex = session.pageIndex,
-            pageCount = session.pageCount,
-            catalog = currentState.catalog,
-            displaySettings = displaySettings,
-        )
-        saveCurrentProgress()
+    private fun applyReadingSessionUpdate(update: ModernReaderReadingSessionUpdate?) {
+        if (update == null) return
+
+        uiState = update.state
+        saveCurrentProgress(update.cursor)
     }
 
     private fun applyDisplaySettings(nextSettings: ModernReaderDisplaySettings) {
@@ -264,17 +270,23 @@ class ModernReaderActivity : ComponentActivity() {
             initialCursor = currentSession.currentPage.start,
         )
         readerSession = nextSession
-        updateReadingStateFromSession(nextSession)
+        applyReadingSessionUpdate(
+            readingSessionCoordinator.currentPage(
+                session = nextSession,
+                currentState = uiState,
+                displaySettings = nextSettings,
+            ),
+        )
     }
 
-    private fun saveCurrentProgress() {
-        val session = readerSession ?: return
+    private fun saveCurrentProgress(cursor: ReaderCursor? = null) {
+        val currentCursor = cursor ?: readerSession?.currentPage?.start ?: return
         val context = readerContext ?: return
         progressController.saveCurrentCursor(
             aid = context.aid,
             vid = context.vid,
             cid = context.cid,
-            cursor = session.currentPage.start,
+            cursor = currentCursor,
         )
     }
 
