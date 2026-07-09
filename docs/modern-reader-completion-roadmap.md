@@ -9,7 +9,7 @@ This roadmap expands the reader-first direction from `docs/kotlin-md3-rewrite-di
 The modern reader already has a meaningful Kotlin foundation:
 
 - Compose Material 3 reader surface and sheets exist under `reader/modern/ui`.
-- Pagination, layout, launch, image, progress, and chapter orchestration are represented by Kotlin components.
+- Pagination, layout, launch, image, progress, and chapter orchestration are represented by Kotlin components. Modern progress saving now preserves the old V1 behavior of clearing the saved record when the current chapter is already on its final page.
 - `ModernReaderActivity` has started moving decisions into coordinators, and chapter loading now rejects stale outcomes from older load generations before they can overwrite newer reader state. The Activity still owns lifecycle wiring, executor state, layout creation, image detail launch, and session construction.
 - The legacy V1 and vertical readers still exist and should remain available until the modern reader is proven as the primary path.
 

@@ -26,4 +26,8 @@ class GlobalConfigReaderProgressStore : ModernReaderProgressStore {
             record.cursor.charIndex,
         )
     }
+
+    override fun clear(aid: Int) {
+        GlobalConfig.removeReadSavesRecordV1(aid)
+    }
 }

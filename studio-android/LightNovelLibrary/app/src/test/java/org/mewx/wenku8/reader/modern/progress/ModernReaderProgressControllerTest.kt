@@ -89,5 +89,7 @@ class ModernReaderProgressControllerTest {
         override fun save(record: ModernReaderProgressRecord) {
             savedRecord = record
         }
+
+        override fun clear(aid: Int) = Unit
     }
 }

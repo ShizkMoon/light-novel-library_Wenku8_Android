@@ -13,6 +13,8 @@ interface ModernReaderProgressStore {
     fun load(aid: Int): ModernReaderProgressRecord?
 
     fun save(record: ModernReaderProgressRecord)
+
+    fun clear(aid: Int)
 }
 
 class ModernReaderProgressController(
@@ -44,5 +46,9 @@ class ModernReaderProgressController(
                 cursor = cursor,
             ),
         )
+    }
+
+    fun clearProgress(aid: Int) {
+        store.clear(aid)
     }
 }

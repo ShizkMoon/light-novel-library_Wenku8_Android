@@ -13,7 +13,13 @@ class ModernReaderProgressSaveCoordinator(
         cursor: ReaderCursor? = null,
     ): ReaderCursor? {
         val currentContext = context ?: return null
-        val currentCursor = cursor ?: session?.currentPage?.start ?: return null
+        val currentPage = session?.currentPage
+        if (cursor == null && currentPage?.hasMoreAfter == false) {
+            progressController.clearProgress(currentContext.aid)
+            return null
+        }
+
+        val currentCursor = cursor ?: currentPage?.start ?: return null
         progressController.saveCurrentCursor(
             aid = currentContext.aid,
             vid = currentContext.vid,

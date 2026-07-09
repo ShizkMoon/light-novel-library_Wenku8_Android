@@ -2,6 +2,7 @@ package org.mewx.wenku8.reader.modern.progress
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mewx.wenku8.reader.modern.launch.ReaderLaunchContext
 import org.mewx.wenku8.reader.modern.model.ReaderBlock
@@ -40,9 +41,10 @@ class ModernReaderProgressSaveCoordinatorTest {
     fun fallsBackToCurrentSessionPageStartWhenCursorIsMissing() {
         val store = FakeProgressStore()
         val coordinator = coordinator(store)
-        val session = sessionFor("甲乙丙丁戊己庚辛壬癸")
+        val session = sessionFor("甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未")
         session.nextPage()
         val pageStart = session.currentPage.start
+        assertTrue(session.currentPage.hasMoreAfter)
 
         val savedCursor = coordinator.saveCurrentProgress(
             context = launchContext,
@@ -52,6 +54,22 @@ class ModernReaderProgressSaveCoordinatorTest {
 
         assertEquals(pageStart, savedCursor)
         assertEquals(pageStart, store.savedRecords.single().cursor)
+    }
+
+    @Test
+    fun clearsSavedProgressWhenCurrentSessionIsOnFinalPage() {
+        val store = FakeProgressStore()
+        val coordinator = coordinator(store)
+
+        val savedCursor = coordinator.saveCurrentProgress(
+            context = launchContext,
+            session = sessionFor("甲乙丙丁"),
+            cursor = null,
+        )
+
+        assertNull(savedCursor)
+        assertEquals(emptyList<ModernReaderProgressRecord>(), store.savedRecords)
+        assertEquals(10, store.clearedAid)
     }
 
     @Test
@@ -107,11 +125,16 @@ class ModernReaderProgressSaveCoordinatorTest {
 
     private class FakeProgressStore : ModernReaderProgressStore {
         val savedRecords = mutableListOf<ModernReaderProgressRecord>()
+        var clearedAid: Int? = null
 
         override fun load(aid: Int): ModernReaderProgressRecord? = null
 
         override fun save(record: ModernReaderProgressRecord) {
             savedRecords += record
+        }
+
+        override fun clear(aid: Int) {
+            clearedAid = aid
         }
     }
 
