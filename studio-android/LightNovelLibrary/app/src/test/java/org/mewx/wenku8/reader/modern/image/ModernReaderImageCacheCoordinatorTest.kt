@@ -37,6 +37,29 @@ class ModernReaderImageCacheCoordinatorTest {
     }
 
     @Test
+    fun forceRefreshQueuesWorkWhenImagePathAlreadyExists() {
+        val queue = WorkQueue()
+        val cachedCallbacks = mutableListOf<Pair<String, String>>()
+        val coordinator = coordinator(
+            queue = queue,
+            cachedPathForSource = { "/cache/corrupt.png" },
+            refreshCachePathAfterDeleting = { "/cache/refreshed.png" },
+        )
+
+        coordinator.requestImageCache(
+            source = "https://img.example.test/corrupt.png",
+            resolvedImagePaths = emptyMap(),
+            refreshExisting = true,
+            isActive = { true },
+            onImageCached = { source, path -> cachedCallbacks += source to path },
+        )
+        queue.runBackground()
+        queue.runMain()
+
+        assertEquals(listOf("https://img.example.test/corrupt.png" to "/cache/refreshed.png"), cachedCallbacks)
+    }
+
+    @Test
     fun cachesImageInBackgroundThenPostsResolvedPath() {
         val queue = WorkQueue()
         val cachedCallbacks = mutableListOf<Pair<String, String>>()
@@ -102,10 +125,12 @@ class ModernReaderImageCacheCoordinatorTest {
         queue: WorkQueue,
         cachedPathForSource: (String) -> String? = { null },
         cachedPathAfterSaving: (String) -> String? = { null },
+        refreshCachePathAfterDeleting: (String) -> String? = cachedPathAfterSaving,
     ): ModernReaderImageCacheCoordinator =
         ModernReaderImageCacheCoordinator(
             cachedPathForSource = cachedPathForSource,
             cachePathAfterSaving = cachedPathAfterSaving,
+            refreshCachePathAfterDeleting = refreshCachePathAfterDeleting,
             runInBackground = queue::enqueueBackground,
             postToMain = queue::enqueueMain,
         )

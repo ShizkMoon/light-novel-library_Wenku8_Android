@@ -37,6 +37,8 @@ import org.mewx.wenku8.reader.modern.settings.SharedPreferencesModernReaderDispl
 import org.mewx.wenku8.reader.modern.ui.ModernReaderScreen
 import org.mewx.wenku8.reader.modern.ui.ModernReaderTheme
 import org.mewx.wenku8.reader.modern.ui.ModernReaderUiState
+import org.mewx.wenku8.reader.modern.ui.ReaderImageCacheRequest
+import org.mewx.wenku8.util.LightCache
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
@@ -75,10 +77,12 @@ class ModernReaderActivity : ComponentActivity() {
         fileNameForUrl = GlobalConfig::generateImageFileNameByURL,
         existingPathForFileName = GlobalConfig::getExistingNovelContentImagePath,
         saveImage = GlobalConfig::saveNovelContentImage,
+        deleteCachedPath = LightCache::deleteFile,
     )
     private val imageCacheCoordinator = ModernReaderImageCacheCoordinator(
         cachedPathForSource = cachedImageResolver::cachedPathFor,
         cachePathAfterSaving = cachedImageResolver::cachePathAfterSaving,
+        refreshCachePathAfterDeleting = cachedImageResolver::cachePathAfterRefreshing,
         runInBackground = { work -> imageCacheExecutor.submit(work) },
         postToMain = { work -> mainHandler.post(work) },
     )
@@ -234,10 +238,11 @@ class ModernReaderActivity : ComponentActivity() {
             resolvedImagePaths = resolvedImagePaths,
         )
 
-    private fun requestImageCache(source: String) =
+    private fun requestImageCache(request: ReaderImageCacheRequest) =
         imageCacheCoordinator.requestImageCache(
-            source = source,
+            source = request.source,
             resolvedImagePaths = resolvedImagePaths,
+            refreshExisting = request.refreshExisting,
             isActive = { !isFinishing && !isDestroyed },
             onImageCached = { imageSource, path ->
                 resolvedImagePaths = resolvedImagePaths + (imageSource to path)

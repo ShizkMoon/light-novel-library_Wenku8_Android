@@ -3,6 +3,7 @@ package org.mewx.wenku8.reader.modern.image
 class ModernReaderImageCacheCoordinator(
     private val cachedPathForSource: (String) -> String?,
     private val cachePathAfterSaving: (String) -> String?,
+    private val refreshCachePathAfterDeleting: (String) -> String? = cachePathAfterSaving,
     private val runInBackground: (() -> Unit) -> Unit,
     private val postToMain: (() -> Unit) -> Unit,
     private val requestGate: ModernReaderImageCacheRequestGate = ModernReaderImageCacheRequestGate(),
@@ -16,14 +17,22 @@ class ModernReaderImageCacheCoordinator(
     fun requestImageCache(
         source: String,
         resolvedImagePaths: Map<String, String>,
+        refreshExisting: Boolean = false,
         isActive: () -> Boolean,
         onImageCached: (String, String) -> Unit,
     ) {
-        if (cachedPathForSource(source, resolvedImagePaths) != null || !requestGate.tryStart(source)) {
+        if (
+            (!refreshExisting && cachedPathForSource(source, resolvedImagePaths) != null) ||
+            !requestGate.tryStart(source)
+        ) {
             return
         }
         runInBackground {
-            val path = cachePathAfterSaving(source)
+            val path = if (refreshExisting) {
+                refreshCachePathAfterDeleting(source)
+            } else {
+                cachePathAfterSaving(source)
+            }
             postToMain {
                 requestGate.finish(source)
                 if (path != null && isActive()) {

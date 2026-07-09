@@ -51,6 +51,48 @@ class ModernReaderCachedImageResolverTest {
     }
 
     @Test
+    fun refreshDeletesExistingPathBeforeSavingImageAgain() {
+        val events = mutableListOf<String>()
+        var cached = true
+        val resolver = ModernReaderCachedImageResolver(
+            fileNameForUrl = { "corrupt.png" },
+            existingPathForFileName = { if (cached) "/reader-cache/corrupt.png" else null },
+            saveImage = {
+                events += "save"
+                cached = true
+                true
+            },
+            deleteCachedPath = { path ->
+                events += "delete:$path"
+                cached = false
+                true
+            },
+        )
+
+        val result = resolver.cachePathAfterRefreshing("https://img.example.test/corrupt.png")
+
+        assertEquals("/reader-cache/corrupt.png", result)
+        assertEquals(listOf("delete:/reader-cache/corrupt.png", "save"), events)
+    }
+
+    @Test
+    fun refreshReturnsNullWhenExistingPathCannotBeDeleted() {
+        var saveCalls = 0
+        val resolver = ModernReaderCachedImageResolver(
+            fileNameForUrl = { "corrupt.png" },
+            existingPathForFileName = { "/reader-cache/corrupt.png" },
+            saveImage = {
+                saveCalls += 1
+                true
+            },
+            deleteCachedPath = { false },
+        )
+
+        assertNull(resolver.cachePathAfterRefreshing("https://img.example.test/corrupt.png"))
+        assertEquals(0, saveCalls)
+    }
+
+    @Test
     fun savesMissingImageAndResolvesCachedPath() {
         var saved = false
         val resolver = ModernReaderCachedImageResolver(

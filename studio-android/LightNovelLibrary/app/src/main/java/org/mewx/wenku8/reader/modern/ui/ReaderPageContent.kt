@@ -16,7 +16,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,7 +37,7 @@ internal fun ReaderPageContent(
     displaySettings: ModernReaderDisplaySettings,
     modifier: Modifier = Modifier,
     cachedImagePathForSource: (String) -> String? = { null },
-    onRequestImageCache: (String) -> Unit = {},
+    onRequestImageCache: (ReaderImageCacheRequest) -> Unit = {},
     onOpenImage: (String) -> Unit = {},
 ) {
     val model = ReaderPageContentUiModel.from(state)
@@ -75,7 +74,7 @@ private fun ReaderLines(
     textColor: Color,
     displaySettings: ModernReaderDisplaySettings,
     cachedImagePathForSource: (String) -> String?,
-    onRequestImageCache: (String) -> Unit,
+    onRequestImageCache: (ReaderImageCacheRequest) -> Unit,
     onOpenImage: (String) -> Unit,
 ) {
     page.lines.forEach { line ->
@@ -106,50 +105,56 @@ private fun ReaderLines(
 @Composable
 private fun ReaderImageLine(
     model: ReaderImageLineUiModel,
-    onRequestImageCache: (String) -> Unit,
+    onRequestImageCache: (ReaderImageCacheRequest) -> Unit,
     onOpenImage: (String) -> Unit,
 ) {
     val cachedPath = model.cachedPath
-    val bitmap = remember(cachedPath) {
-        cachedPath?.let(BitmapFactory::decodeFile)
-    }
-    if (cachedPath == null) {
-        LaunchedEffect(model.source) {
-            onRequestImageCache(model.source)
-        }
-    }
+    val bitmap = cachedPath?.let(BitmapFactory::decodeFile)
     val surfaceModifier = Modifier
         .fillMaxWidth()
         .padding(vertical = 12.dp)
         .height(180.dp)
-
-    if (cachedPath != null && bitmap != null) {
-        Surface(
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            shape = MaterialTheme.shapes.medium,
-            modifier = surfaceModifier.clickable { onOpenImage(cachedPath) },
-        ) {
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = model.placeholderText,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize(),
-            )
+    val bitmapAvailable = bitmap != null
+    val cacheRequest = model.cacheRequest(bitmapAvailable)
+    if (cacheRequest != null) {
+        LaunchedEffect(cacheRequest) {
+            onRequestImageCache(cacheRequest)
         }
-    } else {
-        Surface(
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            shape = MaterialTheme.shapes.medium,
-            modifier = surfaceModifier,
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    text = model.placeholderText,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(horizontal = 16.dp),
+    }
+
+    when (model.displayMode(bitmapAvailable)) {
+        ReaderImageLineDisplayMode.IMAGE -> {
+            val openImagePath = model.openImagePath(bitmapAvailable) ?: return
+            val imageBitmap = bitmap ?: return
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = MaterialTheme.shapes.medium,
+                modifier = surfaceModifier.clickable { onOpenImage(openImagePath) },
+            ) {
+                Image(
+                    bitmap = imageBitmap.asImageBitmap(),
+                    contentDescription = model.placeholderText,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize(),
                 )
+            }
+        }
+        ReaderImageLineDisplayMode.PLACEHOLDER,
+        ReaderImageLineDisplayMode.BROKEN_CACHE -> {
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = MaterialTheme.shapes.medium,
+                modifier = surfaceModifier,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = model.placeholderText,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                }
             }
         }
     }

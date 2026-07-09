@@ -89,7 +89,7 @@ fun ModernReaderScreen(
     onSelectPage: (Int) -> Unit = {},
     onSelectChapter: (ReaderCatalogChapter) -> Unit = {},
     cachedImagePathForSource: (String) -> String? = { null },
-    onRequestImageCache: (String) -> Unit = {},
+    onRequestImageCache: (ReaderImageCacheRequest) -> Unit = {},
     onOpenImage: (String) -> Unit = {},
 ) {
     var controlsVisible by remember { mutableStateOf(true) }
