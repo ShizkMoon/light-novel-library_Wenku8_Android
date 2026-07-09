@@ -58,6 +58,9 @@ class ModernReaderActivity : ComponentActivity() {
     private val progressController = ModernReaderProgressController(GlobalConfigReaderProgressStore())
     private val contentRepository = ModernReaderContentRepository(AndroidModernReaderRawContentSource())
     private val readingSessionCoordinator = ModernReaderReadingSessionCoordinator()
+    private val displaySettingsCoordinator = ModernReaderDisplaySettingsCoordinator(
+        createSession = ::createSession,
+    )
     private val chapterLoadCoordinator = ModernReaderChapterLoadCoordinator(
         loadContent = contentRepository::load,
         createTextMeasurer = ::createTextMeasurer,
@@ -258,30 +261,15 @@ class ModernReaderActivity : ComponentActivity() {
 
     private fun applyDisplaySettings(nextSettings: ModernReaderDisplaySettings) {
         displaySettings = nextSettings
-        val currentState = uiState
-        if (currentState != null) {
-            uiState = currentState.copy(
-                displaySettings = nextSettings,
-                isNightMode = nextSettings.nightMode,
-            )
-        }
-
-        val document = readerDocument ?: return
-        val currentSession = readerSession ?: return
-        val nextSession = ModernReaderSession(
-            document = document,
-            textMeasurer = createTextMeasurer(nextSettings),
-            layout = createLayoutSpec(nextSettings),
-            initialCursor = currentSession.currentPage.start,
+        val update = displaySettingsCoordinator.apply(
+            nextSettings = nextSettings,
+            document = readerDocument,
+            session = readerSession,
+            currentState = uiState,
         )
-        readerSession = nextSession
-        applyReadingSessionUpdate(
-            readingSessionCoordinator.currentPage(
-                session = nextSession,
-                currentState = uiState,
-                displaySettings = nextSettings,
-            ),
-        )
+        uiState = update.state
+        update.rebuiltSession?.let { readerSession = it }
+        update.cursorToPersist?.let(::saveCurrentProgress)
     }
 
     private fun saveCurrentProgress(cursor: ReaderCursor? = null) {
@@ -304,6 +292,18 @@ class ModernReaderActivity : ComponentActivity() {
         }
         return ReaderTextMeasurer { text -> textPaint.measureText(text) }
     }
+
+    private fun createSession(
+        document: ReaderDocument,
+        displaySettings: ModernReaderDisplaySettings,
+        initialCursor: ReaderCursor,
+    ): ModernReaderSession =
+        ModernReaderSession(
+            document = document,
+            textMeasurer = createTextMeasurer(displaySettings),
+            layout = createLayoutSpec(displaySettings),
+            initialCursor = initialCursor,
+        )
 
     private fun createLayoutSpec(
         displaySettings: ModernReaderDisplaySettings,
