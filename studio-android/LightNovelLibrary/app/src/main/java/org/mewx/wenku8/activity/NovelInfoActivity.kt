@@ -786,13 +786,12 @@ class NovelInfoActivity : BaseMaterialActivity() {
         }
     }
 
-    inner class AsyncUpdateCacheTask : AsyncTask<Int, Int, Wenku8Error.ErrorCode>() {
+    inner class AsyncUpdateCacheTask : AsyncTask<Int, NovelCacheProgressEvent, Wenku8Error.ErrorCode>() {
         private var volumeXml = ""
         private var introXml = ""
         private var volumes: List<VolumeList> = ArrayList()
         private var meta: NovelItemMeta? = null
-        private var size = 0
-        private var current = 0
+        private val progressTracker = NovelCacheProgressTracker()
 
         override fun doInBackground(vararg params: Int?): Wenku8Error.ErrorCode {
             if (params.size < 2) return Wenku8Error.ErrorCode.PARAM_COUNT_NOT_MATCHED
@@ -803,10 +802,7 @@ class NovelInfoActivity : BaseMaterialActivity() {
             if (updateResult != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return updateResult
             if (operationType == 0) return Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED
 
-            for (volume in volumes) {
-                size += volume.chapterList.orEmpty().size
-            }
-            progressDialog?.setMaxProgress(size)
+            publishProgress(progressTracker.startChapterTotal(volumes))
 
             val activeMeta = meta ?: return Wenku8Error.ErrorCode.XML_PARSE_FAILED
             for (volume in volumes) {
@@ -873,22 +869,25 @@ class NovelInfoActivity : BaseMaterialActivity() {
                 val contents = OldNovelContentParser.NovelContentParser_onlyImage(xml)
                 for (content in contents) {
                     if (content.type == NovelContentType.IMAGE) {
-                        progressDialog?.setMaxProgress(++size)
+                        publishProgress(progressTracker.addImageWork())
                         val result = cacheImage(content.content, forceUpdate = operationType == 2)
                         if (result != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return result
                         if (!isLoading) return Wenku8Error.ErrorCode.USER_CANCELLED_TASK
-                        publishProgress(++current)
+                        publishProgress(progressTracker.completeWork())
                     }
                 }
             }
 
-            publishProgress(++current)
+            publishProgress(progressTracker.completeWork())
             return Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED
         }
 
-        override fun onProgressUpdate(vararg values: Int?) {
-            if (values.isNotEmpty()) {
-                progressDialog?.setProgress(values[0] ?: 0)
+        override fun onProgressUpdate(vararg values: NovelCacheProgressEvent?) {
+            for (event in values.filterNotNull()) {
+                when (event) {
+                    is NovelCacheProgressEvent.MaxChanged -> progressDialog?.setMaxProgress(event.max)
+                    is NovelCacheProgressEvent.ProgressChanged -> progressDialog?.setProgress(event.progress)
+                }
             }
         }
 
