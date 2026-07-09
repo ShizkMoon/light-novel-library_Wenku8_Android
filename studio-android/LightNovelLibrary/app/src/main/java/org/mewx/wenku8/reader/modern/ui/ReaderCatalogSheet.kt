@@ -145,7 +145,9 @@ private fun ReaderChapterList(
                 ) { chapter ->
                     ReaderChapterRow(
                         chapter = chapter,
-                        onClick = { onSelectChapter(chapter.source) },
+                        onClick = {
+                            catalog.selectChapter(chapter)?.let(onSelectChapter)
+                        },
                     )
                 }
             }

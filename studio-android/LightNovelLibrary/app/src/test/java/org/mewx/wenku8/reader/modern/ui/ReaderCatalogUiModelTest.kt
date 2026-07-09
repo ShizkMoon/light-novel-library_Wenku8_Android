@@ -91,4 +91,42 @@ class ReaderCatalogUiModelTest {
         assertEquals("章节 55", model.sections.single().chapters.single().title)
         assertFalse(model.sections.single().chapters.single().isSelectable)
     }
+
+    @Test
+    fun selectChapterReturnsSourceForSelectableRow() {
+        val currentChapter = ReaderCatalogChapter(cid = 102, title = "第一章", isCurrent = true, volumeId = 1)
+        val nextChapter = ReaderCatalogChapter(cid = 103, title = "第二章", volumeId = 1)
+        val catalog = ModernReaderCatalog(
+            volumeId = 1,
+            volumeTitle = "第一卷",
+            chapters = listOf(currentChapter, nextChapter),
+            sections = listOf(
+                ReaderCatalogSection(
+                    volumeId = 1,
+                    title = "第一卷",
+                    chapters = listOf(currentChapter, nextChapter),
+                ),
+            ),
+        )
+
+        val model = ReaderCatalogUiModel.from(
+            title = "书名",
+            chapterTitle = "第一章",
+            catalog = catalog,
+        )
+
+        assertEquals(nextChapter, model.selectChapter(model.sections.single().chapters[1]))
+    }
+
+    @Test
+    fun selectChapterReturnsNullForCurrentRow() {
+        val catalog = ModernReaderCatalog.from(volume = null, currentCid = 55)
+        val model = ReaderCatalogUiModel.from(
+            title = "书名",
+            chapterTitle = "",
+            catalog = catalog,
+        )
+
+        assertNull(model.selectChapter(model.sections.single().chapters.single()))
+    }
 }

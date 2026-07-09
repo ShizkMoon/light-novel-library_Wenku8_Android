@@ -10,6 +10,9 @@ data class ReaderCatalogUiModel(
     val initialFirstVisibleItemIndex: Int,
     val sections: List<ReaderCatalogSectionUiModel>,
 ) {
+    fun selectChapter(chapter: ReaderCatalogChapterUiModel): ReaderCatalogChapter? =
+        chapter.source.takeIf { chapter.isSelectable }
+
     companion object {
         fun from(
             title: String,
