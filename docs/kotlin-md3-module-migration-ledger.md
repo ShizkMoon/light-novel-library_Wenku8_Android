@@ -10,7 +10,7 @@ Direction baseline: see `docs/kotlin-md3-rewrite-direction.md` for the repo-leve
 
 | Module | Current role | Kotlin status | MD3 status | Required end state |
 | --- | --- | --- | --- | --- |
-| `:app` | Android application, UI, legacy reader, parser models, cache/save integration | Kotlin-owned: 0 Java files and 114 Kotlin files under `app/src/main/java` | Mixed: app theme is Material 3 and settings/modern reader have MD3 surfaces, while most legacy XML screens remain pre-MD3 | Compose or MD3 XML for every retained UI surface, with legacy reader and startup responsibilities split out of large Activities |
+| `:app` | Android application, UI, legacy reader, parser models, cache/save integration | Kotlin-owned: 0 Java files and 115 Kotlin files under `app/src/main/java` | Mixed: app theme is Material 3 and settings/modern reader have MD3 surfaces, while most legacy XML screens remain pre-MD3 | Compose or MD3 XML for every retained UI surface, with legacy reader and startup responsibilities split out of large Activities |
 | `:api` | Private API module when the private checkout is present | Not available in this public workspace | Not a UI module | Must remain compatible as an optional private implementation, with public build not depending on private sources |
 | `:api` via `api-stub` | Public fallback API implementation | Kotlin-owned: 0 Java files and 5 Kotlin files | Not a UI module | Keep explicit public-build behavior and no accidental private endpoint exposure |
 | Gradle/build scripts | Module selection, Kotlin/Compose enablement, Android packaging | Groovy Gradle scripts remain acceptable unless a later migration chooses Kotlin DSL | Compose and Material dependencies are enabled in `:app` | Public checkout builds the Android app without private API sources |
@@ -21,7 +21,7 @@ Direction baseline: see `docs/kotlin-md3-rewrite-direction.md` for the repo-leve
 Generated with PowerShell file counts on 2026-07-10:
 
 ```text
-app/src/main/java:      java=0 kt=114
+app/src/main/java:      java=0 kt=115
 api-stub/src/main/java: java=0  kt=5
 ```
 
@@ -35,7 +35,7 @@ component java=0  kt=2
 fragment  java=0  kt=6
 global    java=0  kt=12
 listener  java=0  kt=3
-reader    java=0  kt=54
+reader    java=0  kt=55
 util      java=0  kt=7
 ```
 

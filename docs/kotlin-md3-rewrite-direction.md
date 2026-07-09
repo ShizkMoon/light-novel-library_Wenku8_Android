@@ -9,7 +9,7 @@ This document sets the repo-level direction for the ongoing Kotlin and Material 
 The active app is no longer blocked by production Java migration. The public Android Studio checkout currently has:
 
 ```text
-studio-android/LightNovelLibrary/app/src/main/java      java=0 kt=113
+studio-android/LightNovelLibrary/app/src/main/java      java=0 kt=115
 studio-android/LightNovelLibrary/api-stub/src/main/java java=0 kt=5
 studio-android/LightNovelLibrary/app/src/main/res/layout xml=34
 ```

@@ -60,8 +60,12 @@ class ModernReaderActivity : ComponentActivity() {
     private val progressSaveCoordinator = ModernReaderProgressSaveCoordinator(progressController)
     private val contentRepository = ModernReaderContentRepository(AndroidModernReaderRawContentSource())
     private val readingSessionCoordinator = ModernReaderReadingSessionCoordinator()
+    private val sessionFactory = ModernReaderSessionFactory(
+        createTextMeasurer = ::createTextMeasurer,
+        createLayoutSpec = ::createLayoutSpec,
+    )
     private val displaySettingsCoordinator = ModernReaderDisplaySettingsCoordinator(
-        createSession = ::createSession,
+        createSession = sessionFactory::create,
     )
     private val chapterSwitchCoordinator = ModernReaderChapterSwitchCoordinator()
     private val chapterLoadCoordinator = ModernReaderChapterLoadCoordinator(
@@ -297,18 +301,6 @@ class ModernReaderActivity : ComponentActivity() {
         }
         return ReaderTextMeasurer { text -> textPaint.measureText(text) }
     }
-
-    private fun createSession(
-        document: ReaderDocument,
-        displaySettings: ModernReaderDisplaySettings,
-        initialCursor: ReaderCursor,
-    ): ModernReaderSession =
-        ModernReaderSession(
-            document = document,
-            textMeasurer = createTextMeasurer(displaySettings),
-            layout = createLayoutSpec(displaySettings),
-            initialCursor = initialCursor,
-        )
 
     private fun createLayoutSpec(
         displaySettings: ModernReaderDisplaySettings,
