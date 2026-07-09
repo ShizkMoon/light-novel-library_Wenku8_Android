@@ -6,14 +6,17 @@ import org.mewx.wenku8.reader.modern.data.ModernReaderContentRequest
 import org.mewx.wenku8.reader.modern.data.ModernReaderLoadResult
 import org.mewx.wenku8.reader.modern.launch.ReaderLaunchArguments
 import org.mewx.wenku8.reader.modern.model.ReaderCursor
-import org.mewx.wenku8.reader.modern.model.ReaderLayoutSpec
-import org.mewx.wenku8.reader.modern.paging.ReaderTextMeasurer
+import org.mewx.wenku8.reader.modern.model.ReaderDocument
+import org.mewx.wenku8.reader.modern.paging.ModernReaderSession
 import org.mewx.wenku8.reader.modern.settings.ModernReaderDisplaySettings
 
 class ModernReaderChapterLoadCoordinator(
     private val loadContent: (ModernReaderContentRequest) -> ModernReaderLoadResult,
-    private val createTextMeasurer: (ModernReaderDisplaySettings) -> ReaderTextMeasurer,
-    private val createLayoutSpec: (ModernReaderDisplaySettings) -> ReaderLayoutSpec,
+    private val createSession: (
+        ReaderDocument,
+        ModernReaderDisplaySettings,
+        ReaderCursor,
+    ) -> ModernReaderSession,
     private val initialCursorFor: (ReaderLaunchArguments) -> ReaderCursor,
     private val runInBackground: (() -> Unit) -> Future<*>,
     private val postToMain: (() -> Unit) -> Unit,
@@ -39,11 +42,10 @@ class ModernReaderChapterLoadCoordinator(
                 fallbackTitle = fallbackTitle,
                 chapterTitle = chapterTitle,
                 result = result,
-                textMeasurer = createTextMeasurer(displaySettings),
-                layout = createLayoutSpec(displaySettings),
                 displaySettings = displaySettings,
                 catalog = catalog,
                 initialCursor = initialCursorFor(args),
+                createSession = createSession,
             )
             postToMain {
                 if (isActive()) {

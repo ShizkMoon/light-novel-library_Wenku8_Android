@@ -70,8 +70,7 @@ class ModernReaderActivity : ComponentActivity() {
     private val chapterSwitchCoordinator = ModernReaderChapterSwitchCoordinator()
     private val chapterLoadCoordinator = ModernReaderChapterLoadCoordinator(
         loadContent = contentRepository::load,
-        createTextMeasurer = ::createTextMeasurer,
-        createLayoutSpec = ::createLayoutSpec,
+        createSession = sessionFactory::create,
         initialCursorFor = { args ->
             progressController.initialCursor(
                 aid = args.aid,

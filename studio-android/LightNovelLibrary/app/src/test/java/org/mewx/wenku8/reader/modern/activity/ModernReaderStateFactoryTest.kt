@@ -17,33 +17,41 @@ import org.mewx.wenku8.reader.modern.model.ReaderLayoutSpec
 import org.mewx.wenku8.reader.modern.model.ReaderLine
 import org.mewx.wenku8.reader.modern.model.ReaderLineType
 import org.mewx.wenku8.reader.modern.model.ReaderPage
+import org.mewx.wenku8.reader.modern.paging.ModernReaderSession
 import org.mewx.wenku8.reader.modern.paging.ReaderTextMeasurer
 import org.mewx.wenku8.reader.modern.settings.ModernReaderDisplaySettings
 
 class ModernReaderStateFactoryTest {
     @Test
     fun successStateRendersFirstPageFromLoadedDocument() {
+        val document = ReaderDocument(
+            title = "正文标题",
+            blocks = listOf(ReaderBlock.Paragraph("测试正文内容")),
+        )
+        val capturedSessions = mutableListOf<CapturedSessionRequest>()
+
         val state = ModernReaderStateFactory.fromLoadResult(
             aid = 7,
             cid = 9,
             fallbackTitle = "备用标题",
             chapterTitle = "第一章",
-            result = ModernReaderLoadResult.Success(
-                ReaderDocument(
-                    title = "正文标题",
-                    blocks = listOf(ReaderBlock.Paragraph("测试正文内容")),
-                ),
-            ),
-            textMeasurer = ReaderTextMeasurer { text -> text.length * 10f },
-            layout = ReaderLayoutSpec(
-                contentWidthPx = 120,
-                contentHeightPx = 160,
-                fontHeightPx = 20,
-                lineSpacingPx = 4,
-                paragraphSpacingPx = 8,
-            ),
+            result = ModernReaderLoadResult.Success(document),
+            createSession = { nextDocument, settings, cursor ->
+                capturedSessions += CapturedSessionRequest(nextDocument, settings, cursor)
+                sessionFor(nextDocument, cursor)
+            },
         )
 
+        assertEquals(
+            listOf(
+                CapturedSessionRequest(
+                    document = document,
+                    settings = ModernReaderDisplaySettings(),
+                    cursor = ReaderCursor.START,
+                ),
+            ),
+            capturedSessions,
+        )
         assertEquals("正文标题", state.title)
         assertEquals("第一章", state.chapterTitle)
         assertEquals(7, state.aid)
@@ -62,14 +70,7 @@ class ModernReaderStateFactoryTest {
             fallbackTitle = "备用标题",
             chapterTitle = "第一章",
             result = ModernReaderLoadResult.Failure(ModernReaderLoadFailure.LOCAL_CONTENT_MISSING),
-            textMeasurer = ReaderTextMeasurer { text -> text.length.toFloat() },
-            layout = ReaderLayoutSpec(
-                contentWidthPx = 120,
-                contentHeightPx = 160,
-                fontHeightPx = 20,
-                lineSpacingPx = 4,
-                paragraphSpacingPx = 8,
-            ),
+            createSession = { _, _, _ -> error("failure state must not create a session") },
         )
 
         assertEquals("备用标题", state.title)
@@ -240,4 +241,27 @@ class ModernReaderStateFactoryTest {
         assertEquals("上一页", state.previousNavigationLabel)
         assertEquals("下一页", state.nextNavigationLabel)
     }
+
+    private data class CapturedSessionRequest(
+        val document: ReaderDocument,
+        val settings: ModernReaderDisplaySettings,
+        val cursor: ReaderCursor,
+    )
+
+    private fun sessionFor(
+        document: ReaderDocument,
+        cursor: ReaderCursor,
+    ): ModernReaderSession =
+        ModernReaderSession(
+            document = document,
+            textMeasurer = ReaderTextMeasurer { text -> text.length * 10f },
+            layout = ReaderLayoutSpec(
+                contentWidthPx = 120,
+                contentHeightPx = 160,
+                fontHeightPx = 20,
+                lineSpacingPx = 4,
+                paragraphSpacingPx = 8,
+            ),
+            initialCursor = cursor,
+        )
 }

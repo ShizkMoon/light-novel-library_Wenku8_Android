@@ -13,6 +13,7 @@ import org.mewx.wenku8.reader.modern.model.ReaderBlock
 import org.mewx.wenku8.reader.modern.model.ReaderCursor
 import org.mewx.wenku8.reader.modern.model.ReaderDocument
 import org.mewx.wenku8.reader.modern.model.ReaderLayoutSpec
+import org.mewx.wenku8.reader.modern.paging.ModernReaderSession
 import org.mewx.wenku8.reader.modern.paging.ReaderTextMeasurer
 import org.mewx.wenku8.reader.modern.settings.ModernReaderDisplaySettings
 
@@ -45,19 +46,32 @@ class ModernReaderChapterLoadModelTest {
             title = "Loaded Title",
             blocks = listOf(ReaderBlock.Paragraph("abcdefghijk")),
         )
+        val capturedSessions = mutableListOf<CapturedSessionRequest>()
 
         val outcome = ModernReaderChapterLoadModel.outcome(
             args = launchArgs(aid = 7, cid = 101),
             fallbackTitle = "Fallback",
             chapterTitle = "Chapter",
             result = ModernReaderLoadResult.Success(document),
-            textMeasurer = fixedTextMeasurer,
-            layout = layout,
             displaySettings = ModernReaderDisplaySettings(nightMode = true),
             catalog = ModernReaderCatalog.from(volume = null, currentCid = 101),
             initialCursor = initialCursor,
+            createSession = { nextDocument, settings, cursor ->
+                capturedSessions += CapturedSessionRequest(nextDocument, settings, cursor)
+                sessionFor(nextDocument, cursor)
+            },
         )
 
+        assertEquals(
+            listOf(
+                CapturedSessionRequest(
+                    document = document,
+                    settings = ModernReaderDisplaySettings(nightMode = true),
+                    cursor = initialCursor,
+                ),
+            ),
+            capturedSessions,
+        )
         assertEquals(document, outcome.document)
         assertNotNull(outcome.session)
         assertEquals(initialCursor, outcome.session?.currentPage?.start)
@@ -74,11 +88,10 @@ class ModernReaderChapterLoadModelTest {
             fallbackTitle = "Fallback",
             chapterTitle = "Chapter",
             result = ModernReaderLoadResult.Failure(ModernReaderLoadFailure.NETWORK_ERROR),
-            textMeasurer = fixedTextMeasurer,
-            layout = layout,
             displaySettings = ModernReaderDisplaySettings(),
             catalog = ModernReaderCatalog.from(volume = null, currentCid = 101),
             initialCursor = ReaderCursor.START,
+            createSession = { document, _, cursor -> sessionFor(document, cursor) },
         )
 
         assertNull(outcome.document)
@@ -96,6 +109,23 @@ class ModernReaderChapterLoadModelTest {
         lineSpacingPx = 4,
         paragraphSpacingPx = 8,
     )
+
+    private data class CapturedSessionRequest(
+        val document: ReaderDocument,
+        val settings: ModernReaderDisplaySettings,
+        val cursor: ReaderCursor,
+    )
+
+    private fun sessionFor(
+        document: ReaderDocument,
+        cursor: ReaderCursor,
+    ): ModernReaderSession =
+        ModernReaderSession(
+            document = document,
+            textMeasurer = fixedTextMeasurer,
+            layout = layout,
+            initialCursor = cursor,
+        )
 
     private fun launchArgs(
         aid: Int,

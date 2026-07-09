@@ -15,6 +15,7 @@ import org.mewx.wenku8.reader.modern.model.ReaderBlock
 import org.mewx.wenku8.reader.modern.model.ReaderCursor
 import org.mewx.wenku8.reader.modern.model.ReaderDocument
 import org.mewx.wenku8.reader.modern.model.ReaderLayoutSpec
+import org.mewx.wenku8.reader.modern.paging.ModernReaderSession
 import org.mewx.wenku8.reader.modern.paging.ReaderTextMeasurer
 import org.mewx.wenku8.reader.modern.settings.ModernReaderDisplaySettings
 
@@ -24,7 +25,7 @@ class ModernReaderChapterLoadCoordinatorTest {
         val queue = WorkQueue()
         val loadedOutcomes = mutableListOf<ModernReaderChapterLoadOutcome>()
         val capturedRequests = mutableListOf<ModernReaderContentRequest>()
-        val capturedSettings = mutableListOf<ModernReaderDisplaySettings>()
+        val capturedSessions = mutableListOf<CapturedSessionRequest>()
         val document = ReaderDocument(
             title = "Loaded",
             blocks = listOf(ReaderBlock.Paragraph("abcdefghijk")),
@@ -35,13 +36,9 @@ class ModernReaderChapterLoadCoordinatorTest {
                 capturedRequests += request
                 ModernReaderLoadResult.Success(document)
             },
-            createTextMeasurer = { settings ->
-                capturedSettings += settings
-                fixedTextMeasurer
-            },
-            createLayoutSpec = { settings ->
-                capturedSettings += settings
-                layout
+            createSession = { nextDocument, settings, cursor ->
+                capturedSessions += CapturedSessionRequest(nextDocument, settings, cursor)
+                sessionFor(nextDocument, cursor)
             },
             initialCursorFor = { ReaderCursor(blockIndex = 0, charIndex = 4) },
         )
@@ -63,7 +60,16 @@ class ModernReaderChapterLoadCoordinatorTest {
         assertEquals(7, capturedRequests.single().aid)
         assertEquals(101, capturedRequests.single().cid)
         assertEquals("Fallback", capturedRequests.single().chapterTitle)
-        assertEquals(listOf(ModernReaderDisplaySettings(nightMode = true), ModernReaderDisplaySettings(nightMode = true)), capturedSettings)
+        assertEquals(
+            listOf(
+                CapturedSessionRequest(
+                    document = document,
+                    settings = ModernReaderDisplaySettings(nightMode = true),
+                    cursor = ReaderCursor(blockIndex = 0, charIndex = 4),
+                ),
+            ),
+            capturedSessions,
+        )
         assertEquals(1, loadedOutcomes.size)
         assertEquals(document, loadedOutcomes.single().document)
         assertEquals(ReaderCursor(blockIndex = 0, charIndex = 4), loadedOutcomes.single().state.page?.start)
@@ -101,18 +107,26 @@ class ModernReaderChapterLoadCoordinatorTest {
         loadContent: (ModernReaderContentRequest) -> ModernReaderLoadResult = {
             ModernReaderLoadResult.Failure(ModernReaderLoadFailure.NETWORK_ERROR)
         },
-        createTextMeasurer: (ModernReaderDisplaySettings) -> ReaderTextMeasurer = { fixedTextMeasurer },
-        createLayoutSpec: (ModernReaderDisplaySettings) -> ReaderLayoutSpec = { layout },
+        createSession: (
+            ReaderDocument,
+            ModernReaderDisplaySettings,
+            ReaderCursor,
+        ) -> ModernReaderSession = { document, _, cursor -> sessionFor(document, cursor) },
         initialCursorFor: (ReaderLaunchArguments) -> ReaderCursor = { ReaderCursor.START },
     ): ModernReaderChapterLoadCoordinator =
         ModernReaderChapterLoadCoordinator(
             loadContent = loadContent,
-            createTextMeasurer = createTextMeasurer,
-            createLayoutSpec = createLayoutSpec,
+            createSession = createSession,
             initialCursorFor = initialCursorFor,
             runInBackground = queue::enqueueBackground,
             postToMain = queue::enqueueMain,
         )
+
+    private data class CapturedSessionRequest(
+        val document: ReaderDocument,
+        val settings: ModernReaderDisplaySettings,
+        val cursor: ReaderCursor,
+    )
 
     private class WorkQueue {
         val future = FakeFuture()
@@ -153,6 +167,17 @@ class ModernReaderChapterLoadCoordinatorTest {
             forceJump = false,
             volume = null,
             volumes = emptyList(),
+        )
+
+    private fun sessionFor(
+        document: ReaderDocument,
+        cursor: ReaderCursor,
+    ): ModernReaderSession =
+        ModernReaderSession(
+            document = document,
+            textMeasurer = fixedTextMeasurer,
+            layout = layout,
+            initialCursor = cursor,
         )
 
     private companion object {

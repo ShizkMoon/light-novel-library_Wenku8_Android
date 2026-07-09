@@ -3,10 +3,10 @@ package org.mewx.wenku8.reader.modern.activity
 import org.mewx.wenku8.reader.modern.catalog.ModernReaderCatalog
 import org.mewx.wenku8.reader.modern.data.ModernReaderLoadFailure
 import org.mewx.wenku8.reader.modern.data.ModernReaderLoadResult
-import org.mewx.wenku8.reader.modern.model.ReaderLayoutSpec
+import org.mewx.wenku8.reader.modern.model.ReaderCursor
+import org.mewx.wenku8.reader.modern.model.ReaderDocument
 import org.mewx.wenku8.reader.modern.model.ReaderPage
 import org.mewx.wenku8.reader.modern.paging.ModernReaderSession
-import org.mewx.wenku8.reader.modern.paging.ReaderTextMeasurer
 import org.mewx.wenku8.reader.modern.settings.ModernReaderDisplaySettings
 import org.mewx.wenku8.reader.modern.ui.ModernReaderUiState
 
@@ -37,18 +37,17 @@ object ModernReaderStateFactory {
         fallbackTitle: String,
         chapterTitle: String,
         result: ModernReaderLoadResult,
-        textMeasurer: ReaderTextMeasurer,
-        layout: ReaderLayoutSpec,
+        createSession: (
+            ReaderDocument,
+            ModernReaderDisplaySettings,
+            ReaderCursor,
+        ) -> ModernReaderSession,
         displaySettings: ModernReaderDisplaySettings = ModernReaderDisplaySettings(),
         catalog: ModernReaderCatalog = ModernReaderCatalog.from(volume = null, currentCid = cid),
     ): ModernReaderUiState =
         when (result) {
             is ModernReaderLoadResult.Success -> {
-                val session = ModernReaderSession(
-                    document = result.document,
-                    textMeasurer = textMeasurer,
-                    layout = layout,
-                )
+                val session = createSession(result.document, displaySettings, ReaderCursor.START)
                 reading(
                     aid = aid,
                     cid = cid,
@@ -62,18 +61,37 @@ object ModernReaderStateFactory {
                 )
             }
             is ModernReaderLoadResult.Failure -> {
-                ModernReaderUiState(
-                    title = fallbackTitle,
-                    chapterTitle = chapterTitle,
+                failure(
                     aid = aid,
                     cid = cid,
-                    catalog = catalog,
-                    errorMessage = result.reason.toReaderMessage(),
+                    fallbackTitle = fallbackTitle,
+                    chapterTitle = chapterTitle,
+                    failure = result.reason,
                     displaySettings = displaySettings,
-                    isNightMode = displaySettings.nightMode,
+                    catalog = catalog,
                 )
             }
         }
+
+    fun failure(
+        aid: Int,
+        cid: Int,
+        fallbackTitle: String,
+        chapterTitle: String,
+        failure: ModernReaderLoadFailure,
+        displaySettings: ModernReaderDisplaySettings = ModernReaderDisplaySettings(),
+        catalog: ModernReaderCatalog = ModernReaderCatalog.from(volume = null, currentCid = cid),
+    ): ModernReaderUiState =
+        ModernReaderUiState(
+            title = fallbackTitle,
+            chapterTitle = chapterTitle,
+            aid = aid,
+            cid = cid,
+            catalog = catalog,
+            errorMessage = failure.toReaderMessage(),
+            displaySettings = displaySettings,
+            isNightMode = displaySettings.nightMode,
+        )
 
     fun reading(
         aid: Int,

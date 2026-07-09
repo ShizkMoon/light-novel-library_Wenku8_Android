@@ -6,9 +6,7 @@ import org.mewx.wenku8.reader.modern.data.ModernReaderLoadResult
 import org.mewx.wenku8.reader.modern.launch.ReaderLaunchArguments
 import org.mewx.wenku8.reader.modern.model.ReaderCursor
 import org.mewx.wenku8.reader.modern.model.ReaderDocument
-import org.mewx.wenku8.reader.modern.model.ReaderLayoutSpec
 import org.mewx.wenku8.reader.modern.paging.ModernReaderSession
-import org.mewx.wenku8.reader.modern.paging.ReaderTextMeasurer
 import org.mewx.wenku8.reader.modern.settings.ModernReaderDisplaySettings
 import org.mewx.wenku8.reader.modern.ui.ModernReaderUiState
 
@@ -35,20 +33,18 @@ object ModernReaderChapterLoadModel {
         fallbackTitle: String,
         chapterTitle: String,
         result: ModernReaderLoadResult,
-        textMeasurer: ReaderTextMeasurer,
-        layout: ReaderLayoutSpec,
         displaySettings: ModernReaderDisplaySettings,
         catalog: ModernReaderCatalog,
         initialCursor: ReaderCursor,
+        createSession: (
+            ReaderDocument,
+            ModernReaderDisplaySettings,
+            ReaderCursor,
+        ) -> ModernReaderSession,
     ): ModernReaderChapterLoadOutcome =
         when (result) {
             is ModernReaderLoadResult.Success -> {
-                val session = ModernReaderSession(
-                    document = result.document,
-                    textMeasurer = textMeasurer,
-                    layout = layout,
-                    initialCursor = initialCursor,
-                )
+                val session = createSession(result.document, displaySettings, initialCursor)
                 ModernReaderChapterLoadOutcome(
                     document = result.document,
                     session = session,
@@ -69,14 +65,12 @@ object ModernReaderChapterLoadModel {
                 ModernReaderChapterLoadOutcome(
                     document = null,
                     session = null,
-                    state = ModernReaderStateFactory.fromLoadResult(
+                    state = ModernReaderStateFactory.failure(
                         aid = args.aid,
                         cid = args.cid,
                         fallbackTitle = fallbackTitle,
                         chapterTitle = chapterTitle,
-                        result = result,
-                        textMeasurer = textMeasurer,
-                        layout = layout,
+                        failure = result.reason,
                         displaySettings = displaySettings,
                         catalog = catalog,
                     ),
