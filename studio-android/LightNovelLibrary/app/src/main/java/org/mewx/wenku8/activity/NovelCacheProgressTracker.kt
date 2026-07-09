@@ -20,6 +20,12 @@ class NovelCacheProgressTracker {
         return NovelCacheProgressEvent.MaxChanged(maxProgress)
     }
 
+    fun startSelectedChapterTotal(
+        volumes: List<VolumeList>,
+        selectedIndices: Iterable<Int>,
+    ): NovelCacheProgressEvent.MaxChanged =
+        startChapterTotal(selectedIndices.map { index -> volumes[index] })
+
     fun addImageWork(): NovelCacheProgressEvent.MaxChanged {
         maxProgress += 1
         return NovelCacheProgressEvent.MaxChanged(maxProgress)

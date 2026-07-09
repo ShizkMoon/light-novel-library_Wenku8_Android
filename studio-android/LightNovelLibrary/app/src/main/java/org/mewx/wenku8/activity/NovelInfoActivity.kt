@@ -964,10 +964,10 @@ class NovelInfoActivity : BaseMaterialActivity() {
         }
     }
 
-    private inner class AsyncDownloadVolumes : AsyncTask<Array<Int>, Int, Wenku8Error.ErrorCode>() {
+    private inner class AsyncDownloadVolumes : AsyncTask<Array<Int>, NovelCacheProgressEvent, Wenku8Error.ErrorCode>() {
         private var dialog: ProgressDialogHelper? = null
         private var loading = false
-        private var size = 0
+        private val progressTracker = NovelCacheProgressTracker()
 
         override fun onPreExecute() {
             super.onPreExecute()
@@ -982,19 +982,17 @@ class NovelInfoActivity : BaseMaterialActivity() {
             }
             dialog?.setProgress(0)
             dialog?.setMaxProgress(1)
-            size = 0
         }
 
         override fun doInBackground(vararg params: Array<Int>): Wenku8Error.ErrorCode {
-            val selectedVolumes = params.firstOrNull() ?: return Wenku8Error.ErrorCode.PARAM_COUNT_NOT_MATCHED
-            var current = 0
-            for (volumeIndex in selectedVolumes) {
-                size += listVolume[volumeIndex].chapterList.orEmpty().size
+            val selectedVolumeIndices = params.firstOrNull() ?: return Wenku8Error.ErrorCode.PARAM_COUNT_NOT_MATCHED
+            publishProgress(progressTracker.startSelectedChapterTotal(listVolume, selectedVolumeIndices.asIterable()))
+            for (volumeIndex in selectedVolumeIndices) {
                 for (chapter in listVolume[volumeIndex].chapterList.orEmpty()) {
                     if (!loading) return Wenku8Error.ErrorCode.USER_CANCELLED_TASK
                     val result = downloadSelectedChapter(chapter.cid)
                     if (result != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return result
-                    publishProgress(++current)
+                    publishProgress(progressTracker.completeWork())
                 }
             }
             return Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED
@@ -1015,20 +1013,25 @@ class NovelInfoActivity : BaseMaterialActivity() {
                 val contents = OldNovelContentParser.NovelContentParser_onlyImage(xml)
                 for (content in contents) {
                     if (content.type == NovelContentType.IMAGE) {
-                        size++
+                        publishProgress(progressTracker.addImageWork())
                         val result = cacheImage(content.content, forceUpdate = false)
                         if (result != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return result
                         if (!loading) return Wenku8Error.ErrorCode.USER_CANCELLED_TASK
+                        publishProgress(progressTracker.completeWork())
                     }
                 }
             }
             return Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED
         }
 
-        override fun onProgressUpdate(vararg values: Int?) {
+        override fun onProgressUpdate(vararg values: NovelCacheProgressEvent?) {
             super.onProgressUpdate(*values)
-            dialog?.setMaxProgress(size)
-            dialog?.setProgress(values.firstOrNull() ?: 0)
+            for (event in values.filterNotNull()) {
+                when (event) {
+                    is NovelCacheProgressEvent.MaxChanged -> dialog?.setMaxProgress(event.max)
+                    is NovelCacheProgressEvent.ProgressChanged -> dialog?.setProgress(event.progress)
+                }
+            }
         }
 
         override fun onPostExecute(errorCode: Wenku8Error.ErrorCode) {

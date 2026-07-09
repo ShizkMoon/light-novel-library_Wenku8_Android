@@ -25,6 +25,24 @@ class NovelCacheProgressTrackerTest {
     }
 
     @Test
+    fun startsWithChapterCountForSelectedVolumesOnly() {
+        val tracker = NovelCacheProgressTracker()
+
+        val event = tracker.startSelectedChapterTotal(
+            volumes = listOf(
+                volume(chapter(101), chapter(102)),
+                volume(chapter(201)),
+                volume(chapter(301), chapter(302), chapter(303)),
+            ),
+            selectedIndices = listOf(0, 2),
+        )
+
+        assertEquals(NovelCacheProgressEvent.MaxChanged(5), event)
+        assertEquals(5, tracker.maxProgress)
+        assertEquals(0, tracker.currentProgress)
+    }
+
+    @Test
     fun discoveredImageIncreasesMaxWithoutAdvancingProgress() {
         val tracker = NovelCacheProgressTracker()
         tracker.startChapterTotal(listOf(volume(chapter(101))))
