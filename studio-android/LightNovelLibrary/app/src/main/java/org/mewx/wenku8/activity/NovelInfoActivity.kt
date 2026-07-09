@@ -855,15 +855,14 @@ class NovelInfoActivity : BaseMaterialActivity() {
             operationType: Int,
         ): Wenku8Error.ErrorCode {
             if (!isLoading) return Wenku8Error.ErrorCode.USER_CANCELLED_TASK
-            val contentValues = Wenku8API.getNovelContent(taskAid, chapterCid, GlobalConfig.getCurrentLang())
-            var xml = GlobalConfig.loadFullFileFromSaveFolder("novel", "$chapterCid.xml")
-            if (xml.isEmpty() || operationType == 2) {
-                val bytes = LightNetwork.LightHttpPostConnection(Wenku8API.BASE_URL, contentValues)
-                    ?: return Wenku8Error.ErrorCode.NETWORK_ERROR
-                xml = String(bytes, Charsets.UTF_8)
-                if (xml.trim().isEmpty()) return Wenku8Error.ErrorCode.SERVER_RETURN_NOTHING
-                GlobalConfig.writeFullFileIntoSaveFolder("novel", "$chapterCid.xml", xml)
-            }
+            val chapterResult = createChapterCacheService().cacheChapter(
+                aid = taskAid,
+                chapterCid = chapterCid,
+                language = GlobalConfig.getCurrentLang(),
+                forceUpdate = operationType == 2,
+            )
+            if (chapterResult.errorCode != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return chapterResult.errorCode
+            val xml = chapterResult.xml
 
             if (GlobalConfig.doCacheImage()) {
                 val contents = OldNovelContentParser.NovelContentParser_onlyImage(xml)
@@ -999,15 +998,14 @@ class NovelInfoActivity : BaseMaterialActivity() {
         }
 
         private fun downloadSelectedChapter(chapterCid: Int): Wenku8Error.ErrorCode {
-            val contentValues = Wenku8API.getNovelContent(aid, chapterCid, GlobalConfig.getCurrentLang())
-            var xml = GlobalConfig.loadFullFileFromSaveFolder("novel", "$chapterCid.xml")
-            if (xml.isEmpty()) {
-                val bytes = LightNetwork.LightHttpPostConnection(Wenku8API.BASE_URL, contentValues)
-                    ?: return Wenku8Error.ErrorCode.NETWORK_ERROR
-                xml = String(bytes, Charsets.UTF_8)
-                if (xml.trim().isEmpty()) return Wenku8Error.ErrorCode.SERVER_RETURN_NOTHING
-                GlobalConfig.writeFullFileIntoSaveFolder("novel", "$chapterCid.xml", xml)
-            }
+            val chapterResult = createChapterCacheService().cacheChapter(
+                aid = aid,
+                chapterCid = chapterCid,
+                language = GlobalConfig.getCurrentLang(),
+                forceUpdate = false,
+            )
+            if (chapterResult.errorCode != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return chapterResult.errorCode
+            val xml = chapterResult.xml
 
             if (GlobalConfig.doCacheImage()) {
                 val contents = OldNovelContentParser.NovelContentParser_onlyImage(xml)
@@ -1086,6 +1084,22 @@ class NovelInfoActivity : BaseMaterialActivity() {
             download = { url -> LightNetwork.LightHttpDownload(url) },
             saveFile = { directoryPath, fileName, bytes, forceUpdate ->
                 LightCache.saveFile(directoryPath, fileName, bytes, forceUpdate)
+            },
+        )
+
+    private fun createChapterCacheService(): NovelChapterCacheService<ContentValues, Wenku8API.AppLanguage> =
+        NovelChapterCacheService(
+            requestForChapter = { novelAid, chapterCid, language ->
+                Wenku8API.getNovelContent(novelAid, chapterCid, language)
+            },
+            loadChapterXml = { chapterCid ->
+                GlobalConfig.loadFullFileFromSaveFolder("novel", "$chapterCid.xml")
+            },
+            downloadChapterXml = { contentValues ->
+                LightNetwork.LightHttpPostConnection(Wenku8API.BASE_URL, contentValues)
+            },
+            saveChapterXml = { chapterCid, xml ->
+                GlobalConfig.writeFullFileIntoSaveFolder("novel", "$chapterCid.xml", xml)
             },
         )
 
