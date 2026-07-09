@@ -92,9 +92,7 @@ fun ModernReaderScreen(
     onRequestImageCache: (ReaderImageCacheRequest) -> Unit = {},
     onOpenImage: (String) -> Unit = {},
 ) {
-    var controlsVisible by remember { mutableStateOf(true) }
-    var settingsVisible by remember { mutableStateOf(false) }
-    var catalogVisible by remember { mutableStateOf(false) }
+    var overlayState by remember { mutableStateOf(ReaderOverlayState()) }
     val chrome = ReaderChromeUiModel.from(state)
     val pageBackground = if (state.displaySettings.nightMode) Color(0xFF17191D) else MaterialTheme.colorScheme.surface
     val pageText = if (state.displaySettings.nightMode) Color(0xFFD9DEE6) else MaterialTheme.colorScheme.onSurface
@@ -134,7 +132,7 @@ fun ModernReaderScreen(
                         ) {
                             ReaderTapAction.PREVIOUS -> performNavigation(ReaderNavigationModel.previousAction(state))
                             ReaderTapAction.NEXT -> performNavigation(ReaderNavigationModel.nextAction(state))
-                            ReaderTapAction.TOGGLE_CONTROLS -> controlsVisible = !controlsVisible
+                            ReaderTapAction.TOGGLE_CONTROLS -> overlayState = overlayState.toggleControls()
                         }
                     }
                 },
@@ -152,11 +150,11 @@ fun ModernReaderScreen(
                 .padding(horizontal = 36.dp, vertical = 20.dp),
         )
 
-        if (controlsVisible) {
+        if (overlayState.controlsVisible) {
             ReaderTopBar(
                 chrome = chrome,
-                onOpenCatalog = { catalogVisible = true },
-                onOpenSettings = { settingsVisible = true },
+                onOpenCatalog = { overlayState = overlayState.openCatalog() },
+                onOpenSettings = { overlayState = overlayState.openSettings() },
                 modifier = Modifier.align(Alignment.TopCenter),
             )
             if (chrome.hasPage) {
@@ -170,7 +168,7 @@ fun ModernReaderScreen(
             }
         }
 
-        if (settingsVisible) {
+        if (overlayState.settingsVisible) {
             ReaderSettingsSheet(
                 displaySettings = state.displaySettings,
                 onDecreaseFontSize = onDecreaseFontSize,
@@ -178,21 +176,22 @@ fun ModernReaderScreen(
                 onDecreaseLineHeight = onDecreaseLineHeight,
                 onIncreaseLineHeight = onIncreaseLineHeight,
                 onNightModeChange = onNightModeChange,
-                onDismiss = { settingsVisible = false },
+                onDismiss = { overlayState = overlayState.dismissSettings() },
             )
         }
 
-        if (catalogVisible) {
+        if (overlayState.catalogVisible) {
             ReaderCatalogSheet(
                 title = state.title,
                 chapterTitle = state.chapterTitle,
                 catalog = state.catalog,
                 isNightMode = state.displaySettings.nightMode,
                 onSelectChapter = { chapter ->
-                    catalogVisible = false
-                    onSelectChapter(chapter)
+                    val selection = overlayState.selectCatalogChapter(chapter)
+                    overlayState = selection.state
+                    onSelectChapter(selection.chapter)
                 },
-                onDismiss = { catalogVisible = false },
+                onDismiss = { overlayState = overlayState.dismissCatalog() },
             )
         }
     }
