@@ -53,6 +53,22 @@ class ModernReaderActivity : ComponentActivity() {
     private var readerContext: ReaderLaunchContext? = null
     private var readerArgs: ReaderLaunchArguments? = null
     private val progressController = ModernReaderProgressController(GlobalConfigReaderProgressStore())
+    private val contentRepository = ModernReaderContentRepository(AndroidModernReaderRawContentSource())
+    private val chapterLoadCoordinator = ModernReaderChapterLoadCoordinator(
+        loadContent = contentRepository::load,
+        createTextMeasurer = ::createTextMeasurer,
+        createLayoutSpec = ::createLayoutSpec,
+        initialCursorFor = { args ->
+            progressController.initialCursor(
+                aid = args.aid,
+                vid = args.volumeId(),
+                cid = args.cid,
+                shouldRestore = args.forceJump,
+            )
+        },
+        runInBackground = { work -> readerExecutor.submit(work) },
+        postToMain = { work -> mainHandler.post(work) },
+    )
     private val cachedImageResolver = ModernReaderCachedImageResolver(
         fileNameForUrl = GlobalConfig::generateImageFileNameByURL,
         existingPathForFileName = GlobalConfig::getExistingNovelContentImagePath,
@@ -128,40 +144,21 @@ class ModernReaderActivity : ComponentActivity() {
         chapterTitle: String,
         catalog: ModernReaderCatalog,
     ) {
-        val request = ModernReaderChapterLoadModel.request(args, fallbackTitle)
-        val repository = ModernReaderContentRepository(AndroidModernReaderRawContentSource())
-        val activeDisplaySettings = displaySettings
+        loadFuture = chapterLoadCoordinator.loadChapter(
+            args = args,
+            fallbackTitle = fallbackTitle,
+            chapterTitle = chapterTitle,
+            catalog = catalog,
+            displaySettings = displaySettings,
+            isActive = { !isFinishing && !isDestroyed },
+            onLoaded = ::applyChapterLoadOutcome,
+        )
+    }
 
-        loadFuture = readerExecutor.submit {
-            val result = repository.load(request)
-            val textMeasurer = createTextMeasurer(activeDisplaySettings)
-            val layout = createLayoutSpec(activeDisplaySettings)
-            val initialCursor = progressController.initialCursor(
-                aid = args.aid,
-                vid = args.volumeId(),
-                cid = args.cid,
-                shouldRestore = args.forceJump,
-            )
-            val outcome = ModernReaderChapterLoadModel.outcome(
-                args = args,
-                fallbackTitle = fallbackTitle,
-                chapterTitle = chapterTitle,
-                result = result,
-                textMeasurer = textMeasurer,
-                layout = layout,
-                displaySettings = activeDisplaySettings,
-                catalog = catalog,
-                initialCursor = initialCursor,
-            )
-
-            mainHandler.post {
-                if (!isFinishing && !isDestroyed) {
-                    readerDocument = outcome.document
-                    readerSession = outcome.session
-                    uiState = outcome.state
-                }
-            }
-        }
+    private fun applyChapterLoadOutcome(outcome: ModernReaderChapterLoadOutcome) {
+        readerDocument = outcome.document
+        readerSession = outcome.session
+        uiState = outcome.state
     }
 
     private fun showPreviousPage() {
