@@ -33,6 +33,8 @@ data class ReaderLaunchArguments(
     fun sourceMode(): ReaderContentSourceMode =
         if (from == SOURCE_LOCAL) ReaderContentSourceMode.LOCAL else ReaderContentSourceMode.CLOUD
 
+    fun hasRequiredIds(): Boolean = aid > 0 && cid > 0
+
     fun volumeId(): Int = currentVolume()?.vid ?: 0
 
     fun catalog(): ModernReaderCatalog =

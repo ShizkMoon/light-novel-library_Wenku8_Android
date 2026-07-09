@@ -13,12 +13,25 @@ data class ModernReaderInitialLaunch(
     val chapterTitle: String,
     val fallbackTitle: String,
     val loadingState: ModernReaderUiState,
+    val shouldLoadChapter: Boolean = true,
 ) {
     companion object {
         fun prepare(
             args: ReaderLaunchArguments,
             displaySettings: ModernReaderDisplaySettings,
         ): ModernReaderInitialLaunch {
+            if (!args.hasRequiredIds()) {
+                return ModernReaderInitialLaunch(
+                    args = args,
+                    context = ReaderLaunchContext.from(args),
+                    catalog = args.catalog(),
+                    chapterTitle = "",
+                    fallbackTitle = "无法打开章节",
+                    loadingState = ModernReaderStateFactory.missingArguments(displaySettings),
+                    shouldLoadChapter = false,
+                )
+            }
+
             val catalog = args.catalog()
             val chapterTitle = catalog.currentChapter?.title.orEmpty()
             val fallbackTitle = chapterTitle.ifBlank { "章节 ${args.cid}" }

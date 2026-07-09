@@ -6,14 +6,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -39,6 +42,8 @@ internal fun ReaderPageContent(
     cachedImagePathForSource: (String) -> String? = { null },
     onRequestImageCache: (ReaderImageCacheRequest) -> Unit = {},
     onOpenImage: (String) -> Unit = {},
+    onRetry: () -> Unit = {},
+    onClose: () -> Unit = {},
 ) {
     val model = ReaderPageContentUiModel.from(state)
     Column(
@@ -50,6 +55,10 @@ internal fun ReaderPageContent(
             ReaderPageContentMode.MESSAGE -> ReaderCenteredMessage(
                 title = model.messageTitle.orEmpty(),
                 message = model.message.orEmpty(),
+                primaryAction = model.primaryAction,
+                secondaryAction = model.secondaryAction,
+                onRetry = onRetry,
+                onClose = onClose,
                 textColor = textColor,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -164,6 +173,10 @@ private fun ReaderImageLine(
 private fun ReaderCenteredMessage(
     title: String,
     message: String,
+    primaryAction: ReaderErrorAction?,
+    secondaryAction: ReaderErrorAction?,
+    onRetry: () -> Unit,
+    onClose: () -> Unit,
     textColor: Color,
     modifier: Modifier = Modifier,
 ) {
@@ -188,6 +201,34 @@ private fun ReaderCenteredMessage(
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
             )
+            if (primaryAction != null || secondaryAction != null) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    secondaryAction?.let { action ->
+                        TextButton(onClick = { performReaderErrorAction(action, onRetry, onClose) }) {
+                            Text(action.label)
+                        }
+                    }
+                    primaryAction?.let { action ->
+                        Button(onClick = { performReaderErrorAction(action, onRetry, onClose) }) {
+                            Text(action.label)
+                        }
+                    }
+                }
+            }
         }
+    }
+}
+
+private fun performReaderErrorAction(
+    action: ReaderErrorAction,
+    onRetry: () -> Unit,
+    onClose: () -> Unit,
+) {
+    when (action) {
+        ReaderErrorAction.RETRY -> onRetry()
+        ReaderErrorAction.CLOSE -> onClose()
     }
 }

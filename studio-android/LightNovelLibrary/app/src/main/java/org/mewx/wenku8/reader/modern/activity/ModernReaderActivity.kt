@@ -134,16 +134,13 @@ class ModernReaderActivity : ComponentActivity() {
                     cachedImagePathForSource = ::cachedImagePathForSource,
                     onRequestImageCache = ::requestImageCache,
                     onOpenImage = ::openImageDetail,
+                    onRetry = ::retryCurrentChapter,
+                    onClose = ::finish,
                 )
             }
         }
 
-        loadChapter(
-            args = launch.args,
-            fallbackTitle = launch.fallbackTitle,
-            chapterTitle = launch.chapterTitle,
-            catalog = launch.catalog,
-        )
+        startChapterLoad(launch)
     }
 
     override fun onDestroy() {
@@ -174,6 +171,28 @@ class ModernReaderActivity : ComponentActivity() {
             isActive = { !isFinishing && !isDestroyed },
             onLoaded = ::applyChapterLoadOutcome,
         )
+    }
+
+    private fun startChapterLoad(launch: ModernReaderInitialLaunch) {
+        if (!launch.shouldLoadChapter) return
+
+        loadChapter(
+            args = launch.args,
+            fallbackTitle = launch.fallbackTitle,
+            chapterTitle = launch.chapterTitle,
+            catalog = launch.catalog,
+        )
+    }
+
+    private fun retryCurrentChapter() {
+        val args = readerArgs ?: return
+        loadFuture?.cancel(true)
+
+        val launch = ModernReaderInitialLaunch.prepare(args, displaySettings)
+        readerArgs = launch.args
+        readerContext = launch.context
+        uiState = launch.loadingState
+        startChapterLoad(launch)
     }
 
     private fun applyChapterLoadOutcome(outcome: ModernReaderChapterLoadOutcome) {

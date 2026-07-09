@@ -9,7 +9,7 @@ This document sets the repo-level direction for the ongoing Kotlin and Material 
 The active app is no longer blocked by production Java migration. The public Android Studio checkout currently has:
 
 ```text
-studio-android/LightNovelLibrary/app/src/main/java      java=0 kt=115
+studio-android/LightNovelLibrary/app/src/main/java      java=0 kt=116
 studio-android/LightNovelLibrary/api-stub/src/main/java java=0 kt=5
 studio-android/LightNovelLibrary/app/src/main/res/layout xml=34
 ```
@@ -17,6 +17,7 @@ studio-android/LightNovelLibrary/app/src/main/res/layout xml=34
 The remaining work is therefore not "convert Java to Kotlin". The remaining work is:
 
 - turn Kotlin-translated screens into Kotlin-designed screens with smaller responsibilities;
+- reduce legacy Android architecture now expressed in Kotlin: large Activities, `AsyncTask`, direct `findViewById`, and broad `GlobalConfig`/cache coupling;
 - make the modern reader the primary Kotlin + native MD3 experience;
 - migrate retained XML surfaces to Material 3 components where Compose is not yet worth the runtime or rewrite cost;
 - keep the public API stub explicit and avoid exposing private endpoints.

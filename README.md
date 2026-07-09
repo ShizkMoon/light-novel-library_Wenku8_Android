@@ -81,6 +81,14 @@ Material Design风格的`轻小说文库`App**完全**开源了！想实践Mater
 
   1.x正式版的所有源代码存放处，`MD`风格的App完整源码，可编译通过并正常运行！（`Android Studio`版本）
 
+### 当前公开构建与 API 边界
+
+当前 `studio-android/LightNovelLibrary` 工程包含 `:app` 和 `:api` 两个 Gradle 模块名。公开仓库未包含私有 API 实现时，`settings.gradle` 会自动把 `:api` 指向 `api-stub/`，这样公开检出可以构建和验证应用结构，但不会依赖或公开私有接口实现。
+
+如果维护者本地存在私有 `api/` 模块，Gradle 会优先使用该模块。公开贡献和重构应保留这个边界：不要把私有端点、密钥或绕过策略补进公开仓库；涉及数据源的改动应通过现有 `:api` 抽象、错误状态和缓存兼容性来完成。
+
+当前 Kotlin + Material Design 3 重构方向见 `docs/kotlin-md3-rewrite-direction.md`，模块迁移盘点见 `docs/kotlin-md3-module-migration-ledger.md`。
+
 
 ----
 

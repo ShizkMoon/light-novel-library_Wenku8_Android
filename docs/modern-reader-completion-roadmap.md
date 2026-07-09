@@ -10,6 +10,7 @@ The modern reader already has a meaningful Kotlin foundation:
 
 - Compose Material 3 reader surface and sheets exist under `reader/modern/ui`.
 - Pagination, layout, launch, image, progress, and chapter orchestration are represented by Kotlin components. Modern progress saving now preserves the old V1 behavior of clearing the saved record when the current chapter is already on its final page.
+- Reader failure states now have a structured UI model for load failures and missing launch arguments, including explicit retry/close actions. Missing chapter/book arguments stop before background loading starts.
 - `ModernReaderActivity` has started moving decisions into coordinators, and chapter loading now rejects stale outcomes from older load generations before they can overwrite newer reader state. The Activity still owns lifecycle wiring, executor state, layout creation, image detail launch, and session construction.
 - The legacy V1 and vertical readers still exist and should remain available until the modern reader is proven as the primary path.
 
@@ -27,6 +28,7 @@ The modern reader is ready to become the default reader only when these user-vis
 6. The table of contents is a first-class entry in the reader chrome.
 7. Empty, loading, network-failure, missing-argument, and missing-catalog states are visible and understandable.
 8. Runtime screenshots or emulator/device checks prove the main reader loop renders correctly before old defaults are retired.
+9. The modern reader is promoted only after the public checkout passes build/tests/lint plus cached/local, failure-state, image, catalog, and settings runtime checks.
 
 ## Milestone 1: Reader Navigation Spine
 

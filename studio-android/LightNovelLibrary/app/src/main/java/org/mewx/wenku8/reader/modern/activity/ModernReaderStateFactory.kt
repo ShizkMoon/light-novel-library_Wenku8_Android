@@ -8,6 +8,7 @@ import org.mewx.wenku8.reader.modern.model.ReaderDocument
 import org.mewx.wenku8.reader.modern.model.ReaderPage
 import org.mewx.wenku8.reader.modern.paging.ModernReaderSession
 import org.mewx.wenku8.reader.modern.settings.ModernReaderDisplaySettings
+import org.mewx.wenku8.reader.modern.ui.ReaderErrorUiModel
 import org.mewx.wenku8.reader.modern.ui.ModernReaderUiState
 
 object ModernReaderStateFactory {
@@ -88,7 +89,20 @@ object ModernReaderStateFactory {
             aid = aid,
             cid = cid,
             catalog = catalog,
-            errorMessage = failure.toReaderMessage(),
+            readerError = ReaderErrorUiModel.loadFailure(failure.toReaderMessage()),
+            displaySettings = displaySettings,
+            isNightMode = displaySettings.nightMode,
+        )
+
+    fun missingArguments(
+        displaySettings: ModernReaderDisplaySettings = ModernReaderDisplaySettings(),
+    ): ModernReaderUiState =
+        ModernReaderUiState(
+            title = "无法打开章节",
+            chapterTitle = "",
+            aid = 0,
+            cid = 0,
+            readerError = ReaderErrorUiModel.missingArguments(),
             displaySettings = displaySettings,
             isNightMode = displaySettings.nightMode,
         )

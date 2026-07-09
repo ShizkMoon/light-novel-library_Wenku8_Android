@@ -29,13 +29,15 @@ class ReaderPageContentUiModelTest {
     fun fromStateShowsFriendlyErrorMessage() {
         val model = ReaderPageContentUiModel.from(
             state(
-                errorMessage = "本地章节不存在",
+                readerError = ReaderErrorUiModel.loadFailure("本地章节不存在"),
             ),
         )
 
         assertEquals(ReaderPageContentMode.MESSAGE, model.mode)
         assertEquals("章节加载失败", model.messageTitle)
         assertEquals("本地章节不存在", model.message)
+        assertEquals("重试", model.primaryActionLabel)
+        assertEquals("返回", model.secondaryActionLabel)
         assertNull(model.page)
     }
 
@@ -73,6 +75,7 @@ class ReaderPageContentUiModelTest {
         chapterTitle: String = "第一章",
         page: ReaderPage? = null,
         isLoading: Boolean = false,
+        readerError: ReaderErrorUiModel? = null,
         errorMessage: String? = null,
     ): ModernReaderUiState =
         ModernReaderUiState(
@@ -82,6 +85,7 @@ class ReaderPageContentUiModelTest {
             cid = 9,
             page = page,
             isLoading = isLoading,
+            readerError = readerError,
             errorMessage = errorMessage,
         )
 

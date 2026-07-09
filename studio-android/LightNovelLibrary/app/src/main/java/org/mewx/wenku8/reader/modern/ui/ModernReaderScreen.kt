@@ -37,7 +37,8 @@ data class ModernReaderUiState(
     val displaySettings: ModernReaderDisplaySettings = ModernReaderDisplaySettings(),
     val isNightMode: Boolean = false,
     val isLoading: Boolean = false,
-    val errorMessage: String? = null,
+    val readerError: ReaderErrorUiModel? = null,
+    val errorMessage: String? = readerError?.message,
 ) {
     val canGoPrevious: Boolean
         get() = page?.hasMoreBefore == true || catalog.previousChapter != null
@@ -93,6 +94,8 @@ fun ModernReaderScreen(
     cachedImagePathForSource: (String) -> String? = { null },
     onRequestImageCache: (ReaderImageCacheRequest) -> Unit = {},
     onOpenImage: (String) -> Unit = {},
+    onRetry: () -> Unit = {},
+    onClose: () -> Unit = {},
 ) {
     var overlayState by remember { mutableStateOf(ReaderOverlayState()) }
     val chrome = ReaderChromeUiModel.from(state)
@@ -147,6 +150,8 @@ fun ModernReaderScreen(
             cachedImagePathForSource = cachedImagePathForSource,
             onRequestImageCache = onRequestImageCache,
             onOpenImage = onOpenImage,
+            onRetry = onRetry,
+            onClose = onClose,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 36.dp, vertical = 20.dp),

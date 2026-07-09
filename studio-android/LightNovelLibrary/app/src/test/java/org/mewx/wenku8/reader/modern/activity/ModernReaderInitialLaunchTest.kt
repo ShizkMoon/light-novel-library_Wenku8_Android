@@ -1,6 +1,7 @@
 package org.mewx.wenku8.reader.modern.activity
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mewx.wenku8.global.api.ChapterInfo
@@ -48,6 +49,19 @@ class ModernReaderInitialLaunchTest {
 
         assertEquals("章节 202", launch.fallbackTitle)
         assertEquals("章节 202", launch.loadingState.title)
+    }
+
+    @Test
+    fun prepareReturnsMissingArgumentsErrorWithoutLoadingChapter() {
+        val launch = ModernReaderInitialLaunch.prepare(
+            args = launchArgs(aid = 0, cid = 0),
+            displaySettings = ModernReaderDisplaySettings(),
+        )
+
+        assertFalse(launch.shouldLoadChapter)
+        assertFalse(launch.loadingState.isLoading)
+        assertEquals("无法打开章节", launch.loadingState.readerError?.title)
+        assertEquals("返回", launch.loadingState.readerError?.secondaryActionLabel)
     }
 
     private fun launchArgs(
