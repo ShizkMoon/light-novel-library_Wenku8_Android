@@ -92,6 +92,12 @@
             android:screenOrientation="portrait">
         </activity>
 
+        <!-- Novel Content Activity (Modern Compose Material 3 Reader) -->
+        <activity android:name="org.mewx.wenku8.reader.modern.activity.ModernReaderActivity"
+            android:label="@string/action_modern_reader"
+            android:screenOrientation="unspecified">
+        </activity>
+
         <!-- View Image Detail Activity -->
         <activity android:name="org.mewx.wenku8.activity.ViewImageDetailActivity"
             android:label="@string/action_watch_image"

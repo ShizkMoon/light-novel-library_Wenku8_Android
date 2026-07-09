@@ -1,11 +1,12 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
 //apply plugin: "jacoco"
 //apply plugin: 'com.github.kt3k.coveralls'
 
 android {
-    compileSdkVersion rootProject.targetSdkVersion
+    compileSdkVersion rootProject.compileSdkVersion
     buildToolsVersion rootProject.buildToolsVersion
     defaultConfig {
         applicationId "org.mewx.wenku8"
@@ -89,6 +90,7 @@ android {
     namespace 'org.mewx.wenku8'
     buildFeatures {
         buildConfig true
+        compose true
     }
     testOptions {
         unitTests.returnDefaultValues = true
@@ -104,6 +106,15 @@ dependencies {
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'com.google.android.material:material:1.13.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    implementation 'androidx.activity:activity-compose:1.12.4'
+    implementation platform('androidx.compose:compose-bom:2026.06.00')
+    implementation 'androidx.compose.foundation:foundation'
+    implementation 'androidx.compose.material:material-icons-extended'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-text'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
 
     implementation project(':api')
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
