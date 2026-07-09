@@ -1073,40 +1073,21 @@ class NovelInfoActivity : BaseMaterialActivity() {
         }
     }
 
-    private fun cacheImage(url: String, forceUpdate: Boolean): Wenku8Error.ErrorCode {
-        val paths = NovelImageCachePlanner.paths(
-            url = url,
+    private fun cacheImage(url: String, forceUpdate: Boolean): Wenku8Error.ErrorCode =
+        createImageCacheService().cacheImage(url, forceUpdate)
+
+    private fun createImageCacheService(): NovelImageCacheService =
+        NovelImageCacheService(
             firstSaveRoot = GlobalConfig.getFirstFullSaveFilePath(),
             secondSaveRoot = GlobalConfig.getSecondFullSaveFilePath(),
             imageFolderName = GlobalConfig.imgsSaveFolderName,
             fileNameForUrl = GlobalConfig::generateImageFileNameByURL,
+            fileExists = { path -> LightCache.testFileExist(path) },
+            download = { url -> LightNetwork.LightHttpDownload(url) },
+            saveFile = { directoryPath, fileName, bytes, forceUpdate ->
+                LightCache.saveFile(directoryPath, fileName, bytes, forceUpdate)
+            },
         )
-        if (NovelImageCachePlanner.shouldDownload(
-                firstExists = LightCache.testFileExist(paths.firstFilePath),
-                secondExists = LightCache.testFileExist(paths.secondFilePath),
-                forceUpdate = forceUpdate,
-            )
-        ) {
-            val fileContent = LightNetwork.LightHttpDownload(url)
-                ?: return Wenku8Error.ErrorCode.NETWORK_ERROR
-            if (
-                !LightCache.saveFile(
-                    paths.firstDirectoryPath,
-                    paths.fileName,
-                    fileContent,
-                    true,
-                )
-            ) {
-                LightCache.saveFile(
-                    paths.secondDirectoryPath,
-                    paths.fileName,
-                    fileContent,
-                    true,
-                )
-            }
-        }
-        return Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED
-    }
 
     private fun handleCacheResult(result: Wenku8Error.ErrorCode) {
         when (result) {
