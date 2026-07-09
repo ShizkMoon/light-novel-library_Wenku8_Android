@@ -26,6 +26,7 @@
     <string name="action_chapter_list">章節列表</string>
     <string name="action_old_vertical_reader">舊引擎閱讀界面</string>
     <string name="action_horizontal_reader_v1">V1閱讀引擎</string>
+    <string name="action_modern_reader">MD3閱讀器</string>
     <string name="action_user_login">Wenku8賬號登錄</string>
     <string name="action_user_info">賬號信息</string>
     <string name="action_sign">簽到</string>
@@ -172,6 +173,7 @@
     <string name="dialog_option_select_and_update">分卷下載</string>
     <string name="dialog_option_reader_engine_v1">左右翻頁引擎 V1</string>
     <string name="dialog_option_reader_engine_old">上下滑動引擎（舊）</string>
+    <string name="dialog_option_reader_engine_modern">MD3閱讀器（新版）</string>
     <string name="dialog_option_reader_font_system">使用系統默認字體</string>
     <string name="dialog_option_reader_font_custom">使用自定義ttf/otf（建議手動拷貝至wenku8/custom目錄下，不支持外置SD卡）</string>
     <string name="dialog_option_reader_background_system">使用默認的模擬紙張</string>

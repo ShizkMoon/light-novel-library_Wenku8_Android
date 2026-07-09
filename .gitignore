@@ -30,6 +30,9 @@ studio-android/LightNovelLibrary/app/*class_files.txt
 studio-android/LightNovelLibrary/app/*mapping.txt
 studio-android/LightNovelLibrary/app/*-report.txt
 
+# Local Codex/Superpowers brainstorming artifacts
+.superpowers/
+
 
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
@@ -52,6 +55,7 @@ studio-android/LightNovelLibrary/app/*-report.txt
 # Gradle:
 .idea/gradle.xml
 .idea/libraries
+**/.kotlin/
 
 # Mongo Explorer plugin:
 .idea/mongoSettings.xml

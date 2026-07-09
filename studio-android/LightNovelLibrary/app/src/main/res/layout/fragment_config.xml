@@ -1,287 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    xmlns:card-view="http://schemas.android.com/apk/res-auto"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:background="@color/myWindowBackground">
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    tools:context="org.mewx.wenku8.fragment.ConfigFragment">
 
-    <!-- Notice -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        tools:context="org.mewx.wenku8.fragment.ConfigFragment">
+        android:paddingStart="16dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="24dp">
 
-        <RelativeLayout
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/notice_layout"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingLeft="6dp"
-            android:paddingRight="6dp"
-            android:paddingTop="2dp">
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/default_divider"
+            app:strokeWidth="1dp">
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/notice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:clickable="true"
-                card-view:cardBackgroundColor="@color/novel_item_white"
-                card-view:cardElevation="2dp"
-                card-view:cardUseCompatPadding="true"
-                card-view:cardMaxElevation="2dp">
+                android:lineSpacingExtra="2dp"
+                android:paddingStart="16dp"
+                android:paddingTop="14dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="14dp"
+                android:text="@string/na"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp" />
+        </com.google.android.material.card.MaterialCardView>
 
-                <TextView
-                    android:id="@+id/notice"
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/default_divider"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/btn_choose_language"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:paddingTop="8dp"
-                    android:paddingBottom="8dp"
-                    android:paddingLeft="8dp"
-                    android:paddingRight="8dp"
-                    android:background="@color/menu_transparent"
-                    android:text="@string/na"
-                    android:textColor="@color/menu_text_color" />
-            </androidx.cardview.widget.CardView>
-        </RelativeLayout>
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="56dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp">
 
-        <!-- Layout DataBackup -->
-        <!--<RelativeLayout-->
-            <!--android:id="@+id/btn_data_backup"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="48dp"-->
-            <!--android:clickable="true"-->
-            <!--android:background="@drawable/btn_menu_item">-->
-            <!--<ImageView-->
-                <!--android:id="@+id/image_upload"-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:paddingLeft="16dp"-->
-                <!--android:layout_centerVertical="true"-->
-                <!--android:src="@drawable/ic_upload"/>-->
-            <!--<TextView-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:layout_marginLeft="32dp"-->
-                <!--android:textSize="16sp"-->
-                <!--android:layout_centerVertical="true"-->
-                <!--android:layout_toRightOf="@id/image_upload"-->
-                <!--android:textColor="@color/dlgTitleColor"-->
-                <!--android:text="@string/config_data_backup"/>-->
-        <!--</RelativeLayout>-->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/config_choose_language"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp" />
+                </LinearLayout>
 
-        <!--&lt;!&ndash; Layout DataRestore &ndash;&gt;-->
-        <!--<RelativeLayout-->
-            <!--android:id="@+id/btn_data_restore"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="48dp"-->
-            <!--android:clickable="true"-->
-            <!--android:background="@drawable/btn_menu_item">-->
-            <!--<ImageView-->
-                <!--android:id="@+id/image_restore"-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:paddingLeft="16dp"-->
-                <!--android:layout_centerVertical="true"-->
-                <!--android:src="@drawable/ic_restore"/>-->
-            <!--<TextView-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:layout_marginLeft="32dp"-->
-                <!--android:textSize="16sp"-->
-                <!--android:layout_centerVertical="true"-->
-                <!--android:layout_toRightOf="@id/image_restore"-->
-                <!--android:textColor="@color/dlgTitleColor"-->
-                <!--android:text="@string/config_data_restore"/>-->
-        <!--</RelativeLayout>-->
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp" />
 
-        <!-- Layout Language -->
-        <RelativeLayout
-            android:id="@+id/btn_choose_language"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:clickable="true"
-            android:background="@drawable/btn_menu_item">
-            <ImageView
-                android:id="@+id/image_chooselanguage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingLeft="16dp"
-                android:layout_centerVertical="true"
-                android:src="@drawable/ic_config"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="32dp"
-                android:textSize="16sp"
-                android:layout_centerVertical="true"
-                android:layout_toRightOf="@id/image_chooselanguage"
-                android:textColor="@color/dlgTitleColor"
-                android:text="@string/config_choose_language"/>
-        </RelativeLayout>
+                <LinearLayout
+                    android:id="@+id/btn_clear_cache"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="56dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp">
 
-        <!-- Layout ClearCache -->
-        <RelativeLayout
-            android:id="@+id/btn_clear_cache"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:clickable="true"
-            android:background="@drawable/btn_menu_item">
-            <ImageView
-                android:id="@+id/image_clearcache"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingLeft="16dp"
-                android:layout_centerVertical="true"
-                android:src="@drawable/ic_clearcache"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="32dp"
-                android:textSize="16sp"
-                android:layout_centerVertical="true"
-                android:layout_toRightOf="@id/image_clearcache"
-                android:textColor="@color/dlgTitleColor"
-                android:text="@string/config_clear_cache"/>
-        </RelativeLayout>
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/config_clear_cache"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp" />
+                </LinearLayout>
 
-        <!-- Layout NavigationDrawerWallpaper -->
-        <RelativeLayout
-            android:id="@+id/btn_navigation_drawer_wallpaper"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:clickable="true"
-            android:background="@drawable/btn_menu_item">
-            <ImageView
-                android:id="@+id/image_wallpaper"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingLeft="16dp"
-                android:layout_centerVertical="true"
-                android:src="@drawable/ic_wallpaper"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="32dp"
-                android:textSize="16sp"
-                android:layout_centerVertical="true"
-                android:layout_toRightOf="@id/image_wallpaper"
-                android:textColor="@color/dlgTitleColor"
-                android:text="@string/config_navigation_drawer_wallpaper"/>
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp" />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_rightarrow"
-                android:paddingRight="16dp"
-                android:layout_centerVertical="true"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true" />
-        </RelativeLayout>
+                <LinearLayout
+                    android:id="@+id/btn_navigation_drawer_wallpaper"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="56dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp">
 
-        <!-- Layout EinkMode -->
-        <RelativeLayout
-            android:id="@+id/eink_mode_config"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:clickable="true"
-            android:background="@drawable/btn_menu_item">
-            <ImageView
-                android:id="@+id/image_eink_mode"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingLeft="16dp"
-                android:layout_centerVertical="true"
-                android:src="@drawable/ic_config"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="32dp"
-                android:textSize="16sp"
-                android:layout_centerVertical="true"
-                android:layout_toRightOf="@id/image_eink_mode"
-                android:textColor="@color/dlgTitleColor"
-                android:text="@string/config_eink_mode"/>
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/config_navigation_drawer_wallpaper"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp" />
 
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/switch_eink_mode"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingRight="16dp"
-                android:layout_centerVertical="true"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true" />
-        </RelativeLayout>
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_rightarrow"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+                </LinearLayout>
 
-        <!-- Layout CheckUpdate -->
-        <RelativeLayout
-            android:id="@+id/btn_check_update"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:clickable="true"
-            android:background="@drawable/btn_menu_item">
-            <ImageView
-                android:id="@+id/image_update"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingLeft="16dp"
-                android:layout_centerVertical="true"
-                android:src="@drawable/ic_update"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="32dp"
-                android:textSize="16sp"
-                android:layout_centerVertical="true"
-                android:layout_toRightOf="@id/image_update"
-                android:textColor="@color/dlgTitleColor"
-                android:text="@string/config_check_update"/>
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp" />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_rightarrow"
-                android:paddingRight="16dp"
-                android:layout_centerVertical="true"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true" />
-        </RelativeLayout>
+                <LinearLayout
+                    android:id="@+id/eink_mode_config"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="56dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="16dp">
 
-        <!-- Layout About -->
-        <RelativeLayout
-            android:id="@+id/btn_about"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:clickable="true"
-            android:background="@drawable/btn_menu_item">
-            <ImageView
-                android:id="@+id/image_about"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingLeft="16dp"
-                android:layout_centerVertical="true"
-                android:src="@drawable/ic_about"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="32dp"
-                android:textSize="16sp"
-                android:layout_centerVertical="true"
-                android:layout_toRightOf="@id/image_about"
-                android:textColor="@color/dlgTitleColor"
-                android:text="@string/config_about"/>
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/config_eink_mode"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp" />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_rightarrow"
-                android:paddingRight="16dp"
-                android:layout_centerVertical="true"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true" />
-        </RelativeLayout>
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switch_eink_mode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
 
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp" />
+
+                <LinearLayout
+                    android:id="@+id/btn_check_update"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="56dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/config_check_update"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp" />
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_rightarrow"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+                </LinearLayout>
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp" />
+
+                <LinearLayout
+                    android:id="@+id/btn_about"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="56dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/config_about"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp" />
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_rightarrow"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </ScrollView>
