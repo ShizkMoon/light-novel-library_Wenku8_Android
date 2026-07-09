@@ -50,8 +50,6 @@ import org.mewx.wenku8.api.Wenku8Error
 import org.mewx.wenku8.global.GlobalConfig
 import org.mewx.wenku8.global.api.ChapterInfo
 import org.mewx.wenku8.global.api.NovelItemMeta
-import org.mewx.wenku8.global.api.OldNovelContentParser
-import org.mewx.wenku8.global.api.OldNovelContentParser.NovelContentType
 import org.mewx.wenku8.global.api.VolumeList
 import org.mewx.wenku8.global.api.Wenku8Parser
 import org.mewx.wenku8.network.LightNetwork
@@ -68,6 +66,7 @@ import org.mewx.wenku8.util.ProgressDialogHelper
  */
 class NovelInfoActivity : BaseMaterialActivity() {
     private var firebaseAnalytics: FirebaseAnalytics? = null
+    private val chapterImageReferenceParser = NovelChapterImageReferenceParser()
     private var aid = 1
     private var from: String? = ""
     private var title: String? = ""
@@ -865,15 +864,12 @@ class NovelInfoActivity : BaseMaterialActivity() {
             val xml = chapterResult.xml
 
             if (GlobalConfig.doCacheImage()) {
-                val contents = OldNovelContentParser.NovelContentParser_onlyImage(xml)
-                for (content in contents) {
-                    if (content.type == NovelContentType.IMAGE) {
-                        publishProgress(progressTracker.addImageWork())
-                        val result = cacheImage(content.content, forceUpdate = operationType == 2)
-                        if (result != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return result
-                        if (!isLoading) return Wenku8Error.ErrorCode.USER_CANCELLED_TASK
-                        publishProgress(progressTracker.completeWork())
-                    }
+                for (imageReference in chapterImageReferenceParser.imageReferences(xml)) {
+                    publishProgress(progressTracker.addImageWork())
+                    val result = cacheImage(imageReference, forceUpdate = operationType == 2)
+                    if (result != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return result
+                    if (!isLoading) return Wenku8Error.ErrorCode.USER_CANCELLED_TASK
+                    publishProgress(progressTracker.completeWork())
                 }
             }
 
@@ -1008,15 +1004,12 @@ class NovelInfoActivity : BaseMaterialActivity() {
             val xml = chapterResult.xml
 
             if (GlobalConfig.doCacheImage()) {
-                val contents = OldNovelContentParser.NovelContentParser_onlyImage(xml)
-                for (content in contents) {
-                    if (content.type == NovelContentType.IMAGE) {
-                        publishProgress(progressTracker.addImageWork())
-                        val result = cacheImage(content.content, forceUpdate = false)
-                        if (result != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return result
-                        if (!loading) return Wenku8Error.ErrorCode.USER_CANCELLED_TASK
-                        publishProgress(progressTracker.completeWork())
-                    }
+                for (imageReference in chapterImageReferenceParser.imageReferences(xml)) {
+                    publishProgress(progressTracker.addImageWork())
+                    val result = cacheImage(imageReference, forceUpdate = false)
+                    if (result != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return result
+                    if (!loading) return Wenku8Error.ErrorCode.USER_CANCELLED_TASK
+                    publishProgress(progressTracker.completeWork())
                 }
             }
             return Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED
