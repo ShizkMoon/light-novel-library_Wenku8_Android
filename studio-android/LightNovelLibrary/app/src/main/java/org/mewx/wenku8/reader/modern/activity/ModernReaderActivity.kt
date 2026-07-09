@@ -19,7 +19,7 @@ import org.mewx.wenku8.reader.modern.catalog.ReaderCatalogChapter
 import org.mewx.wenku8.reader.modern.data.AndroidModernReaderRawContentSource
 import org.mewx.wenku8.reader.modern.data.ModernReaderContentRepository
 import org.mewx.wenku8.reader.modern.image.ModernReaderCachedImageResolver
-import org.mewx.wenku8.reader.modern.image.ModernReaderImageCacheRequestGate
+import org.mewx.wenku8.reader.modern.image.ModernReaderImageCacheCoordinator
 import org.mewx.wenku8.reader.modern.layout.ModernReaderLayoutSpecFactory
 import org.mewx.wenku8.reader.modern.layout.ModernReaderWindowMetrics
 import org.mewx.wenku8.reader.modern.launch.ReaderLaunchArguments
@@ -58,7 +58,12 @@ class ModernReaderActivity : ComponentActivity() {
         existingPathForFileName = GlobalConfig::getExistingNovelContentImagePath,
         saveImage = GlobalConfig::saveNovelContentImage,
     )
-    private val imageCacheRequestGate = ModernReaderImageCacheRequestGate()
+    private val imageCacheCoordinator = ModernReaderImageCacheCoordinator(
+        cachedPathForSource = cachedImageResolver::cachedPathFor,
+        cachePathAfterSaving = cachedImageResolver::cachePathAfterSaving,
+        runInBackground = { work -> imageCacheExecutor.submit(work) },
+        postToMain = { work -> mainHandler.post(work) },
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -212,22 +217,20 @@ class ModernReaderActivity : ComponentActivity() {
     }
 
     private fun cachedImagePathForSource(source: String): String? =
-        resolvedImagePaths[source] ?: cachedImageResolver.cachedPathFor(source)
+        imageCacheCoordinator.cachedPathForSource(
+            source = source,
+            resolvedImagePaths = resolvedImagePaths,
+        )
 
-    private fun requestImageCache(source: String) {
-        if (cachedImagePathForSource(source) != null || !imageCacheRequestGate.tryStart(source)) {
-            return
-        }
-        imageCacheExecutor.submit {
-            val path = cachedImageResolver.cachePathAfterSaving(source)
-            mainHandler.post {
-                imageCacheRequestGate.finish(source)
-                if (!isFinishing && !isDestroyed && path != null) {
-                    resolvedImagePaths = resolvedImagePaths + (source to path)
-                }
-            }
-        }
-    }
+    private fun requestImageCache(source: String) =
+        imageCacheCoordinator.requestImageCache(
+            source = source,
+            resolvedImagePaths = resolvedImagePaths,
+            isActive = { !isFinishing && !isDestroyed },
+            onImageCached = { imageSource, path ->
+                resolvedImagePaths = resolvedImagePaths + (imageSource to path)
+            },
+        )
 
     private fun updateReadingStateFromSession(session: ModernReaderSession) {
         val currentState = uiState ?: return
