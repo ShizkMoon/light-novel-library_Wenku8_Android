@@ -44,6 +44,11 @@ internal fun ReaderCatalogSheet(
     onSelectChapter: (ReaderCatalogChapter) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val catalogUi = ReaderCatalogUiModel.from(
+        title = title,
+        chapterTitle = chapterTitle,
+        catalog = catalog,
+    )
     val supportingTextColor = if (isNightMode) {
         Color(0xFFB7C0CB)
     } else {
@@ -81,9 +86,17 @@ internal fun ReaderCatalogSheet(
                     )
                 }
             }
+            catalogUi.supportingMessage?.let { message ->
+                Text(
+                    text = message,
+                    color = supportingTextColor,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                )
+            }
             ReaderChapterList(
                 catalog = catalog,
-                fallbackTitle = chapterTitle.ifBlank { title },
+                fallbackTitle = catalogUi.fallbackTitle,
                 supportingTextColor = supportingTextColor,
                 onSelectChapter = onSelectChapter,
             )

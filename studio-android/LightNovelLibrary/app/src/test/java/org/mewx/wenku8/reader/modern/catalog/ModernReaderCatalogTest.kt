@@ -154,10 +154,25 @@ class ModernReaderCatalogTest {
 
         assertEquals("", catalog.volumeTitle)
         assertEquals(0, catalog.volumeId)
+        assertFalse(catalog.hasKnownCatalog)
         assertEquals(listOf(ReaderCatalogChapter(cid = 55, title = "章节 55", isCurrent = true)), catalog.chapters)
         assertEquals(55, catalog.currentChapter?.cid)
         assertNull(catalog.previousChapter)
         assertNull(catalog.nextChapter)
+    }
+
+    @Test
+    fun volumeWithChaptersIsMarkedAsKnownCatalog() {
+        val catalog = ModernReaderCatalog.from(
+            volume = volume(
+                vid = 12,
+                name = "第一卷",
+                chapters = listOf(chapter(101, "序章")),
+            ),
+            currentCid = 101,
+        )
+
+        assertTrue(catalog.hasKnownCatalog)
     }
 
     private fun volume(

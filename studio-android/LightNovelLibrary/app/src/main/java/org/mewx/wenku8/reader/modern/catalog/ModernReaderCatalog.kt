@@ -19,6 +19,7 @@ data class ModernReaderCatalog(
     val volumeId: Int,
     val volumeTitle: String,
     val chapters: List<ReaderCatalogChapter>,
+    val hasKnownCatalog: Boolean = true,
     val sections: List<ReaderCatalogSection> = listOf(
         ReaderCatalogSection(
             volumeId = volumeId,
@@ -103,6 +104,7 @@ data class ModernReaderCatalog(
                     volumeId = 0,
                     volumeTitle = "",
                     chapters = listOf(fallbackChapter),
+                    hasKnownCatalog = false,
                     sections = listOf(
                         ReaderCatalogSection(
                             volumeId = 0,
