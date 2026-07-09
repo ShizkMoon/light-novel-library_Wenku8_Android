@@ -44,6 +44,8 @@ The reader is the product core. User-visible progress should prioritize the read
 
 The older V1 and vertical readers may stay as fallback while the modern reader reaches parity. They should not be the architecture target.
 
+Reader completion details live in `docs/modern-reader-completion-roadmap.md`. Use that roadmap when choosing the next reader slice.
+
 ## UI Direction
 
 Use native Material Design 3, but choose the UI runtime by screen type:
