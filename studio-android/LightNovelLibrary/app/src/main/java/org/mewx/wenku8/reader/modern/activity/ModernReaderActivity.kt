@@ -19,6 +19,7 @@ import org.mewx.wenku8.reader.modern.catalog.ReaderCatalogChapter
 import org.mewx.wenku8.reader.modern.data.AndroidModernReaderRawContentSource
 import org.mewx.wenku8.reader.modern.data.ModernReaderContentRepository
 import org.mewx.wenku8.reader.modern.image.ModernReaderCachedImageResolver
+import org.mewx.wenku8.reader.modern.image.ModernReaderImageCacheRequestGate
 import org.mewx.wenku8.reader.modern.layout.ModernReaderLayoutSpecFactory
 import org.mewx.wenku8.reader.modern.layout.ModernReaderWindowMetrics
 import org.mewx.wenku8.reader.modern.launch.ReaderLaunchArguments
@@ -40,9 +41,11 @@ import java.util.concurrent.Future
 
 class ModernReaderActivity : ComponentActivity() {
     private val readerExecutor = Executors.newSingleThreadExecutor()
+    private val imageCacheExecutor = Executors.newFixedThreadPool(2)
     private val mainHandler = Handler(Looper.getMainLooper())
     private var loadFuture: Future<*>? = null
     private var uiState: ModernReaderUiState? by mutableStateOf(null)
+    private var resolvedImagePaths: Map<String, String> by mutableStateOf(emptyMap())
     private var displaySettings: ModernReaderDisplaySettings by mutableStateOf(ModernReaderDisplaySettings())
     private lateinit var displaySettingsController: ModernReaderDisplaySettingsController
     private var readerSession: ModernReaderSession? = null
@@ -53,7 +56,9 @@ class ModernReaderActivity : ComponentActivity() {
     private val cachedImageResolver = ModernReaderCachedImageResolver(
         fileNameForUrl = GlobalConfig::generateImageFileNameByURL,
         existingPathForFileName = GlobalConfig::getExistingNovelContentImagePath,
+        saveImage = GlobalConfig::saveNovelContentImage,
     )
+    private val imageCacheRequestGate = ModernReaderImageCacheRequestGate()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,7 +89,8 @@ class ModernReaderActivity : ComponentActivity() {
                     },
                     onSelectPage = ::showPage,
                     onSelectChapter = ::showChapter,
-                    cachedImagePathForSource = cachedImageResolver::cachedPathFor,
+                    cachedImagePathForSource = ::cachedImagePathForSource,
+                    onRequestImageCache = ::requestImageCache,
                     onOpenImage = ::openImageDetail,
                 )
             }
@@ -102,6 +108,7 @@ class ModernReaderActivity : ComponentActivity() {
         saveCurrentProgress()
         loadFuture?.cancel(true)
         readerExecutor.shutdownNow()
+        imageCacheExecutor.shutdownNow()
         super.onDestroy()
     }
 
@@ -202,6 +209,24 @@ class ModernReaderActivity : ComponentActivity() {
         intent.putExtra("path", path)
         startActivity(intent)
         overridePendingTransition(R.anim.fade_in, R.anim.hold)
+    }
+
+    private fun cachedImagePathForSource(source: String): String? =
+        resolvedImagePaths[source] ?: cachedImageResolver.cachedPathFor(source)
+
+    private fun requestImageCache(source: String) {
+        if (cachedImagePathForSource(source) != null || !imageCacheRequestGate.tryStart(source)) {
+            return
+        }
+        imageCacheExecutor.submit {
+            val path = cachedImageResolver.cachePathAfterSaving(source)
+            mainHandler.post {
+                imageCacheRequestGate.finish(source)
+                if (!isFinishing && !isDestroyed && path != null) {
+                    resolvedImagePaths = resolvedImagePaths + (source to path)
+                }
+            }
+        }
     }
 
     private fun updateReadingStateFromSession(session: ModernReaderSession) {

@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +38,7 @@ internal fun ReaderPageContent(
     displaySettings: ModernReaderDisplaySettings,
     modifier: Modifier = Modifier,
     cachedImagePathForSource: (String) -> String? = { null },
+    onRequestImageCache: (String) -> Unit = {},
     onOpenImage: (String) -> Unit = {},
 ) {
     val model = ReaderPageContentUiModel.from(state)
@@ -59,6 +61,7 @@ internal fun ReaderPageContent(
                     textColor = textColor,
                     displaySettings = displaySettings,
                     cachedImagePathForSource = cachedImagePathForSource,
+                    onRequestImageCache = onRequestImageCache,
                     onOpenImage = onOpenImage,
                 )
             }
@@ -72,12 +75,14 @@ private fun ReaderLines(
     textColor: Color,
     displaySettings: ModernReaderDisplaySettings,
     cachedImagePathForSource: (String) -> String?,
+    onRequestImageCache: (String) -> Unit,
     onOpenImage: (String) -> Unit,
 ) {
     page.lines.forEach { line ->
         if (line.type == ReaderLineType.IMAGE) {
             ReaderImageLine(
                 model = ReaderImageLineUiModel.from(line, cachedImagePathForSource),
+                onRequestImageCache = onRequestImageCache,
                 onOpenImage = onOpenImage,
             )
         } else {
@@ -101,11 +106,17 @@ private fun ReaderLines(
 @Composable
 private fun ReaderImageLine(
     model: ReaderImageLineUiModel,
+    onRequestImageCache: (String) -> Unit,
     onOpenImage: (String) -> Unit,
 ) {
     val cachedPath = model.cachedPath
     val bitmap = remember(cachedPath) {
         cachedPath?.let(BitmapFactory::decodeFile)
+    }
+    if (cachedPath == null) {
+        LaunchedEffect(model.source) {
+            onRequestImageCache(model.source)
+        }
     }
     val surfaceModifier = Modifier
         .fillMaxWidth()

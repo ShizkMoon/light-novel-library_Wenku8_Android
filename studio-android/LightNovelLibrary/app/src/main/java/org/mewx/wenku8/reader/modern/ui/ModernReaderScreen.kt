@@ -89,6 +89,7 @@ fun ModernReaderScreen(
     onSelectPage: (Int) -> Unit = {},
     onSelectChapter: (ReaderCatalogChapter) -> Unit = {},
     cachedImagePathForSource: (String) -> String? = { null },
+    onRequestImageCache: (String) -> Unit = {},
     onOpenImage: (String) -> Unit = {},
 ) {
     var controlsVisible by remember { mutableStateOf(true) }
@@ -144,6 +145,7 @@ fun ModernReaderScreen(
             textColor = pageText,
             displaySettings = state.displaySettings,
             cachedImagePathForSource = cachedImagePathForSource,
+            onRequestImageCache = onRequestImageCache,
             onOpenImage = onOpenImage,
             modifier = Modifier
                 .fillMaxSize()
