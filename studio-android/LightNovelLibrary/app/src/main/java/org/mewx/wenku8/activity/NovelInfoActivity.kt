@@ -864,13 +864,14 @@ class NovelInfoActivity : BaseMaterialActivity() {
             val xml = chapterResult.xml
 
             if (GlobalConfig.doCacheImage()) {
-                for (imageReference in chapterImageReferenceParser.imageReferences(xml)) {
-                    publishProgress(progressTracker.addImageWork())
-                    val result = cacheImage(imageReference, forceUpdate = operationType == 2)
-                    if (result != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return result
-                    if (!isLoading) return Wenku8Error.ErrorCode.USER_CANCELLED_TASK
-                    publishProgress(progressTracker.completeWork())
-                }
+                val imageResult = createChapterImageCacheCoordinator().cacheImages(
+                    xml = xml,
+                    forceUpdate = operationType == 2,
+                    progressTracker = progressTracker,
+                    isActive = { isLoading },
+                    publishProgress = { event -> publishProgress(event) },
+                )
+                if (imageResult != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return imageResult
             }
 
             publishProgress(progressTracker.completeWork())
@@ -1004,13 +1005,14 @@ class NovelInfoActivity : BaseMaterialActivity() {
             val xml = chapterResult.xml
 
             if (GlobalConfig.doCacheImage()) {
-                for (imageReference in chapterImageReferenceParser.imageReferences(xml)) {
-                    publishProgress(progressTracker.addImageWork())
-                    val result = cacheImage(imageReference, forceUpdate = false)
-                    if (result != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return result
-                    if (!loading) return Wenku8Error.ErrorCode.USER_CANCELLED_TASK
-                    publishProgress(progressTracker.completeWork())
-                }
+                val imageResult = createChapterImageCacheCoordinator().cacheImages(
+                    xml = xml,
+                    forceUpdate = false,
+                    progressTracker = progressTracker,
+                    isActive = { loading },
+                    publishProgress = { event -> publishProgress(event) },
+                )
+                if (imageResult != Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED) return imageResult
             }
             return Wenku8Error.ErrorCode.SYSTEM_1_SUCCEEDED
         }
@@ -1066,6 +1068,12 @@ class NovelInfoActivity : BaseMaterialActivity() {
 
     private fun cacheImage(url: String, forceUpdate: Boolean): Wenku8Error.ErrorCode =
         createImageCacheService().cacheImage(url, forceUpdate)
+
+    private fun createChapterImageCacheCoordinator(): NovelChapterImageCacheCoordinator =
+        NovelChapterImageCacheCoordinator(
+            imageReferencesForXml = chapterImageReferenceParser::imageReferences,
+            cacheImage = ::cacheImage,
+        )
 
     private fun createImageCacheService(): NovelImageCacheService =
         NovelImageCacheService(
