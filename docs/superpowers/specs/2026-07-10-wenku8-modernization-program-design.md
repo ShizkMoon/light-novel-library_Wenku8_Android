@@ -839,7 +839,7 @@ Reboot, force-stop, and scheduler-stop evidence comes from a host-side multi-sta
 
 ### 10.1 Final UI Rule
 
-Every reachable product page uses Jetpack Compose Material 3. XML layouts may remain temporarily only for compatibility entry shells. Final completion requires zero active page layouts, zero Fragment-owned pages, zero AppCompat Toolbar, and zero old CardView in reachable UI. Platform splash, manifest, theme, and non-page resource XML may remain when required by Android.
+Every reachable product page uses Jetpack Compose Material 3. XML layouts may remain temporarily only for compatibility entry shells. Final completion requires zero active page layouts, zero Fragment-owned pages, zero AppCompat Toolbar, zero old CardView, zero Material 2 component, zero Material View widget/bridge, and zero `AndroidView`/ViewBinding/DataBinding page bridge in reachable UI. Platform splash, manifest, theme, and non-page resource XML may remain when required by Android. Kotlin-PSI verification rejects `Card`, `ElevatedCard`, or `OutlinedCard` nested in another Material 3 card content lambda; screenshots are not accepted as proof of structural non-nesting.
 
 ### 10.2 Top-Level Information Architecture
 
@@ -893,11 +893,52 @@ The baseline has 15 manifest Activities and 6 Fragment UI owners. Shared drawer/
 
 Phase 0 checks in a machine-readable UI-owner/action ledger derived from Manifest, Fragment creation, click/menu handlers, and layout/menu resources. Every owner, visible action, state, Intent, and retirement decision has a stable ID, target route/component, test ID, and owner. The generated user-route count is reported from this ledger; a hand-maintained number such as 19 is not a completion gate.
 
+The baseline XML surface is independently stable-ID'd; Activity/Fragment ownership is not treated as sufficient classification for a layout. `docs/verification/xml-surface-ledger.yaml` contains exactly these 34 current layout rows and is regenerated from structured resource/source references. A row records reachability roots, kind (`PAGE`, `PAGE_COMPONENT`, `OVERLAY`, `ROW`, or `UNREACHABLE`), final route/component, replacement test ID, and retirement owner. Source drift, an additional layout, or a reachable row without all fields fails Phase 0 and Phase 8.
+
+| ID | Current XML resource | Current owner/kind | Final route/component | Replacement proof | Retirement owner |
+| --- | --- | --- | --- | --- | --- |
+| X01 | `ad_unified.xml` | Unreferenced ad layout / `UNREACHABLE` | None; advertising UI absent | `UI-X01-NO-AD` | Phase 0 Task 7 |
+| X02 | `dialog_progress.xml` | `ProgressDialogHelper` / `OVERLAY` | Material 3 progress/Dialog state | `UI-X02-PROGRESS` | Phase 8 Task 3 |
+| X03 | `fragment_config.xml` | F06 / `PAGE` | `settings/root` and subordinate settings | `UI-X03-SETTINGS` | Phase 7 Tasks 8, 14 |
+| X04 | `fragment_fav.xml` | F05 / `PAGE` | `library/bookshelf` | `UI-X04-BOOKSHELF` | Phase 4 Tasks 8, 15 |
+| X05 | `fragment_latest.xml` | F01 / `PAGE` | `library/discover/latest` | `UI-X05-LATEST` | Phase 4 Tasks 6, 15 |
+| X06 | `fragment_novel_item_list.xml` | F03 / `PAGE_COMPONENT` | Shared Material 3 `NovelList` | `UI-X06-NOVEL-LIST` | Phase 4 Tasks 5-7 |
+| X07 | `fragment_rklist.xml` | F02 / `PAGE` | `library/discover/ranking` | `UI-X07-RANKING` | Phase 4 Tasks 6, 15 |
+| X08 | `layout_about.xml` | A15 / `PAGE` | `settings/about` | `UI-X08-ABOUT` | Phase 7 Tasks 11, 14 |
+| X09 | `layout_account_info.xml` | A13 / `PAGE` | `account/profile` | `UI-X09-PROFILE` | Phase 7 Tasks 6, 14 |
+| X10 | `layout_main_menu.xml` | F04 / `PAGE_COMPONENT` | AppShell navigation/actions | `UI-X10-SHELL-ACTIONS` | Phase 8 Task 3 after Phase 7 |
+| X11 | `layout_main.xml` | A01 / `PAGE` | AppShell/NavHost | `UI-X11-SHELL` | Phase 8 Tasks 3, 5 |
+| X12 | `layout_menu_background_selector.xml` | A14 / `PAGE` | `settings/wallpaper` | `UI-X12-WALLPAPER` | Phase 7 Tasks 10, 14 |
+| X13 | `layout_novel_chapter_sidesheet.xml` | A04 / `PAGE_COMPONENT` | `novel/catalog` Sheet/pane | `UI-X13-CATALOG` | Phase 5 Tasks 7, 15 |
+| X14 | `layout_novel_info.xml` | A04 / `PAGE` | `novel/detail` | `UI-X14-DETAIL` | Phase 5 Tasks 7, 14-15 |
+| X15 | `layout_novel_review_list.xml` | A05 / `PAGE` | `novel/reviews` | `UI-X15-REVIEWS` | Phase 5 Tasks 10, 14 |
+| X16 | `layout_novel_review_new_post.xml` | A06 / `PAGE` | `novel/reviews/create` | `UI-X16-REVIEW-CREATE` | Phase 5 Tasks 11, 14 |
+| X17 | `layout_novel_review_reply_list.xml` | A07 / `PAGE` | `novel/reviews/thread` and reply | `UI-X17-REVIEW-THREAD` | Phase 5 Tasks 10-11, 14 |
+| X18 | `layout_reader_swipe_page.xml` | A09 / `PAGE_COMPONENT` | Reader paginated page | `UI-X18-PAGINATED-PAGE` | Phase 6 Task 19 |
+| X19 | `layout_reader_swipe_temp.xml` | A09 / `PAGE` | Reader paginated mode | `UI-X19-PAGINATED` | Phase 6 Task 19 |
+| X20 | `layout_search_result.xml` | A03 / `PAGE` | `library/search/results` | `UI-X20-SEARCH-RESULTS` | Phase 4 Task 12 |
+| X21 | `layout_search.xml` | A02 / `PAGE` | `library/search` | `UI-X21-SEARCH` | Phase 4 Task 12 |
+| X22 | `layout_user_login.xml` | A12 / `PAGE` | `account/login` | `UI-X22-LOGIN` | Phase 7 Tasks 6, 14 |
+| X23 | `layout_vertical_reader_temp.xml` | A08 / `PAGE` | Reader continuous mode | `UI-X23-CONTINUOUS` | Phase 6 Task 19 |
+| X24 | `layout_view_image_detail.xml` | A11 / `PAGE` | `image/viewer` | `UI-X24-IMAGE` | Phase 7 Tasks 12, 14 |
+| X25 | `toolbar_main.xml` | A01 / `PAGE_COMPONENT` | AppShell Material 3 app bar | `UI-X25-SHELL-BAR` | Phase 8 Task 3 |
+| X26 | `toolbar_pure.xml` | Shared Activities / `PAGE_COMPONENT` | Route-owned Material 3 app bars | `UI-X26-ROUTE-BARS` | Phase 8 Task 3 |
+| X27 | `toolbar_search_result.xml` | A03 / `PAGE_COMPONENT` | Search results Material 3 app bar | `UI-X27-RESULT-BAR` | Phase 4 Task 12 |
+| X28 | `toolbar_search.xml` | A02 / `PAGE_COMPONENT` | Material 3 SearchBar/DockedSearchBar | `UI-X28-SEARCH-BAR` | Phase 4 Task 12 |
+| X29 | `view_novel_chapter_item.xml` | A04 / `ROW` | Catalog `ListItem` | `UI-X29-CHAPTER-ROW` | Phase 5 Task 7 |
+| X30 | `view_novel_item.xml` | F03/A04 / `ROW` | Shared Material 3 novel row | `UI-X30-NOVEL-ROW` | Phase 5 Task 15 |
+| X31 | `view_review_post_item.xml` | A05 / `ROW` | Review `ListItem` | `UI-X31-REVIEW-ROW` | Phase 5 Task 10 |
+| X32 | `view_review_reply_item.xml` | A07 / `ROW` | Reply `ListItem` | `UI-X32-REPLY-ROW` | Phase 5 Task 10 |
+| X33 | `view_search_history_item.xml` | A02 / `ROW` | Search history chip/row | `UI-X33-HISTORY-ROW` | Phase 4 Task 7 |
+| X34 | `view_tab.xml` | F02 / `PAGE_COMPONENT` | Material 3 `PrimaryTabRow` | `UI-X34-TABS` | Phase 4 Task 6 |
+
+Every X row remains in the ledger after deletion as retirement evidence. A layout may be deleted earlier than its listed final retirement task only when its exact row already has zero-reachability and replacement-test hashes and no rollback implementation references it.
+
 ### 10.5 Standard Components
 
 - Scaffold, TopAppBar, SnackbarHost.
 - NavigationBar, NavigationRail, modal/permanent drawer.
-- LazyColumn, ListItem, and cards only for genuinely grouped/repeated items.
+- LazyColumn, ListItem, and cards only for genuinely grouped/repeated items. Cards are never nested, and page sections are never wrapped in decorative/floating cards.
 - Material 3 SearchBar or DockedSearchBar.
 - PrimaryTabRow/SecondaryTabRow for ranking/category peer views, FilterChip/InputChip for filters, DropdownMenu for option sets, and Tooltip for unfamiliar icon actions; each has selected, focus, disabled, and overflow semantics.
 - Material 3 pull-to-refresh.
@@ -1012,6 +1053,8 @@ Executable accessibility coverage includes:
 - Focus returns to the invoking element after Dialog/Sheet and to the relevant field after validation failure.
 - Decorative images are cleared from semantics; meaningful cover/chapter images have localized descriptions or contextual labels.
 - IME action, keyboard dismissal, and focus-next order are tested for login, search, review, reply, and settings forms.
+
+Automated semantics, keyboard, and DPAD tests do not stand in for an enabled assistive service. TalkBack and Switch Access journeys are executed on a controlled device and recorded in `docs/verification/manual-assistive-technology-manifest.yaml`. Each row binds the exact journey to assistive service package/version, device/API/build fingerprint, locale/theme/font/navigation/posture configuration, source/app/test-APK SHA-256, tester, independent reviewer, UTC time, report path/hash, and PASS. Phase-specific gates reject missing/stale rows, and Phase 8 reruns the complete matrix after the final `MainActivity` host move; user/account/captcha/content values are absent from evidence.
 
 Predictive-back and inset coverage includes API 36 gesture start/cancel/commit tests for Dialog, Sheet, reader chrome, drawer, subordinate route, top-level destination, and legacy trampoline. Each form and reader-chrome state is tested with IME open, display cutout, gesture navigation, three-button navigation, and compact-height landscape insets.
 
@@ -1197,6 +1240,7 @@ Exit gate:
 - Migration golden, interruption, retry, upgrade, and rollback tests.
 - Background scheduler-selection, chunk/checkpoint, quota/stop-reason, foreground/user-initiated transfer, notification, cancellation, and process/reboot recovery tests.
 - Host-side multi-stage Gradle/ADB scheduler-stop, process-kill, force-stop, and emulator-reboot journeys with separate seed/verify processes and retained pre/post evidence.
+- UI route process-death journeys use separate `seed` and `verify` instrumentation invocations around a host-issued `adb shell am kill`; they prove a changed PID and restored route/selection/scroll/input-safe state. Activity recreation in one instrumentation process is not process-death evidence.
 - ViewModel state/effect tests with fake dispatchers and clocks.
 - Compose UI tests for every route and state family.
 - Deterministic screenshot tests for layout, typography, theme, and adaptive behavior.
@@ -1250,6 +1294,8 @@ Configurations:
 - E-ink/grayscale setting where retained.
 
 `docs/verification/ui-golden-manifest.yaml` is the authoritative coverage gate. Each case records stable case ID, UI-owner/route ID, state, overlay, viewport, window posture/occlusion, locale, content language, theme, font scale, display scale, navigation mode, reader mode, fixture hash, baseline image hash, pixel/structural tolerance, permitted dynamic masks, and approval commit.
+
+All screenshot cases use the single AndroidX Compose UI instrumentation pipeline defined by the plan index. Recording produces host-side candidates only; a separate reviewed approval command creates baselines, and verification always captures fresh pixels without modifying approved files. Baselines live at `docs/verification/ui-goldens/<case-id>.png`; candidate/actual files live only under `app/build/reports/ui-goldens/`. The manifest verifier decodes every PNG, rejects blank/flat images, recomputes hashes, and rejects any task/report that did not pass through the registered host extraction pipeline.
 
 Mandatory combinations:
 
@@ -1432,10 +1478,11 @@ The modernization program is complete only when current evidence proves every it
 ### 16.4 UI and Accessibility
 
 - Every stable Activity/Fragment/action ID in the checked-in UI-owner ledger maps to a Compose Material 3 route/component or documented retirement evidence.
-- Reachable page XML, Fragment pages, AppCompat Toolbar, and old CardView count are zero.
+- Every X01-X34 XML-surface row maps to a tested Compose Material 3 replacement or exact-file retirement evidence.
+- Reachable page XML, Fragment pages, AppCompat Toolbar, old CardView, Material 2 component, Material View/`AndroidView` bridge, and nested Material 3 card count are zero.
 - Compact, medium, and expanded navigation work.
 - Light/dark, Simplified/Traditional Chinese, and font scale 2.0 pass without clipping or overlap.
-- TalkBack, keyboard, DPAD, and Switch Access complete the mandated discover, detail, bookshelf/download, reader, account, settings, and community journeys.
+- TalkBack, keyboard, DPAD, and Switch Access complete the mandated discover, detail, bookshelf/download, reader, account, settings, and community journeys; final TalkBack/Switch Access rows are current, independently reviewed, and hash-bound to the final source and artifacts.
 - Every route has loading/content/empty/error/offline/auth states where applicable.
 - Reader parity and screenshot gates pass before old reader entries disappear.
 
